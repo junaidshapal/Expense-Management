@@ -20,6 +20,14 @@ import SettingsPanel from "@/components/SettingsPanel";
 
 type Tab = "dashboard" | "add" | "expenses" | "settlement" | "settings";
 
+const PAGE_META: Record<Tab, { title: string; subtitle: string; emoji: string }> = {
+  dashboard:  { title: "Dashboard",       subtitle: "All-time summary",              emoji: "📊" },
+  add:        { title: "Add Expense",     subtitle: "Record a new shared expense",   emoji: "➕" },
+  expenses:   { title: "Expense History", subtitle: "All recorded expenses",         emoji: "🗒️" },
+  settlement: { title: "Settlement",      subtitle: "Calculate who owes whom",       emoji: "🤝" },
+  settings:   { title: "Settings",        subtitle: "Manage names and data",         emoji: "⚙️" },
+};
+
 export default function HomePage() {
   const [activeTab, setActiveTab] = useState<Tab>("dashboard");
   const [expenses, setExpenses] = useState<Expense[]>([]);
@@ -90,28 +98,34 @@ export default function HomePage() {
     if (tab !== "add") setEditingExpense(null);
   }, []);
 
+  const meta = editingExpense && activeTab === "add"
+    ? { title: "Edit Expense", subtitle: "Update expense details", emoji: "✏️" }
+    : PAGE_META[activeTab];
+
   return (
     <div className="flex flex-col min-h-screen">
       <Navbar activeTab={activeTab} onTabChange={handleTabChange} />
 
-      {/* Main content with top padding for header and bottom padding for nav */}
-      <main className="flex-1 px-4 pt-4 pb-24 w-full">
+      <main className="flex-1 px-4 pt-4 pb-28 w-full">
+        {/* Page header */}
+        <div className="flex items-center gap-2.5 mb-4 animate-fade-in">
+          <div className="w-8 h-8 rounded-xl bg-gradient-to-br from-green-500 to-green-700 flex items-center justify-center shadow-sm shadow-green-200 text-base leading-none shrink-0">
+            {meta.emoji}
+          </div>
+          <div>
+            <h1 className="text-base font-bold text-gray-900 leading-tight">{meta.title}</h1>
+            <p className="text-[11px] text-gray-400 font-medium">{meta.subtitle}</p>
+          </div>
+        </div>
+
         {activeTab === "dashboard" && (
-          <div className="space-y-1">
-            <h1 className="text-lg font-semibold">Dashboard</h1>
-            <p className="text-sm text-muted-foreground mb-4">All-time summary</p>
+          <div key="dashboard" className="animate-fade-in">
             <SummaryCards expenses={expenses} settings={settings} />
           </div>
         )}
 
         {activeTab === "add" && (
-          <div className="space-y-1">
-            <h1 className="text-lg font-semibold">
-              {editingExpense ? "Edit Expense" : "Add Expense"}
-            </h1>
-            <p className="text-sm text-muted-foreground mb-4">
-              {editingExpense ? "Update expense details" : "Record a new shared expense"}
-            </p>
+          <div key="add" className="animate-fade-in">
             <ExpenseForm
               settings={settings}
               editingExpense={editingExpense}
@@ -125,34 +139,26 @@ export default function HomePage() {
         )}
 
         {activeTab === "expenses" && (
-          <div className="space-y-1">
-            <h1 className="text-lg font-semibold">Expense History</h1>
-            <p className="text-sm text-muted-foreground mb-4">All recorded expenses</p>
+          <div key="expenses" className="animate-fade-in space-y-3">
             <Filters filters={filters} settings={settings} onChange={setFilters} />
-            <div className="mt-3">
-              <ExpenseList
-                expenses={expenses}
-                settings={settings}
-                filters={filters}
-                onEdit={handleEditExpense}
-                onDelete={handleDeleteExpense}
-              />
-            </div>
+            <ExpenseList
+              expenses={expenses}
+              settings={settings}
+              filters={filters}
+              onEdit={handleEditExpense}
+              onDelete={handleDeleteExpense}
+            />
           </div>
         )}
 
         {activeTab === "settlement" && (
-          <div className="space-y-1">
-            <h1 className="text-lg font-semibold">Settlement</h1>
-            <p className="text-sm text-muted-foreground mb-4">Calculate who owes whom</p>
+          <div key="settlement" className="animate-fade-in">
             <SettlementCalculator expenses={expenses} settings={settings} />
           </div>
         )}
 
         {activeTab === "settings" && (
-          <div className="space-y-1">
-            <h1 className="text-lg font-semibold">Settings</h1>
-            <p className="text-sm text-muted-foreground mb-4">Manage names and data</p>
+          <div key="settings" className="animate-fade-in">
             <SettingsPanel
               settings={settings}
               onSettingsChange={handleSaveSettings}
