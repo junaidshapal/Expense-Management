@@ -26,11 +26,11 @@ export function calculateSummary(expenses: Expense[], _settings: AppSettings): S
   if (personABalance < 0) {
     debtor = "personA";
     creditor = "personB";
-    amountOwed = Math.abs(personABalance);
+    amountOwed = Math.round(Math.abs(personABalance) * 100) / 100;
   } else if (personBBalance < 0) {
     debtor = "personB";
     creditor = "personA";
-    amountOwed = Math.abs(personBBalance);
+    amountOwed = Math.round(Math.abs(personBBalance) * 100) / 100;
   }
 
   return {
