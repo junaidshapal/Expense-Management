@@ -51,3 +51,7 @@ export function generateId(): string {
 export function capitalizeWords(str: string): string {
   return str.replace(/\b\w/g, (c) => c.toUpperCase());
 }
+
+export function clampNumber(value: number, min: number, max: number): number {
+  return Math.min(Math.max(value, min), max);
+}
