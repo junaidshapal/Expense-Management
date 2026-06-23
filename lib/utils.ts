@@ -55,3 +55,7 @@ export function capitalizeWords(str: string): string {
 export function clampNumber(value: number, min: number, max: number): number {
   return Math.min(Math.max(value, min), max);
 }
+
+export function truncateText(text: string, maxLength: number): string {
+  return text.length > maxLength ? text.slice(0, maxLength).trimEnd() + "…" : text;
+}
