@@ -47,3 +47,7 @@ export function getLast15DaysRange(days = 15): { startDate: string; endDate: str
 export function generateId(): string {
   return `${Date.now()}-${Math.random().toString(36).slice(2, 9)}`;
 }
+
+export function capitalizeWords(str: string): string {
+  return str.replace(/\b\w/g, (c) => c.toUpperCase());
+}
