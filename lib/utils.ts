@@ -29,10 +29,10 @@ export function getTodayString(): string {
   return `${yyyy}-${mm}-${dd}`;
 }
 
-export function getLast15DaysRange(): { startDate: string; endDate: string } {
+export function getLast15DaysRange(days = 15): { startDate: string; endDate: string } {
   const end = new Date();
   const start = new Date();
-  start.setDate(start.getDate() - 15);
+  start.setDate(start.getDate() - days);
 
   const format = (d: Date) => {
     const yyyy = d.getFullYear();
