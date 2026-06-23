@@ -21,7 +21,7 @@ import SettingsPanel from "@/components/SettingsPanel";
 type Tab = "dashboard" | "add" | "expenses" | "settlement" | "settings";
 
 const PAGE_META: Record<Tab, { title: string; subtitle: string; emoji: string }> = {
-  dashboard:  { title: "Dashboard",       subtitle: "All-time summary",              emoji: "📊" },
+  dashboard:  { title: "Dashboard",       subtitle: "Overview of shared expenses",   emoji: "📊" },
   add:        { title: "Add Expense",     subtitle: "Record a new shared expense",   emoji: "➕" },
   expenses:   { title: "Expense History", subtitle: "All recorded expenses",         emoji: "🗒️" },
   settlement: { title: "Settlement",      subtitle: "Calculate who owes whom",       emoji: "🤝" },
