@@ -59,3 +59,8 @@ export function clampNumber(value: number, min: number, max: number): number {
 export function truncateText(text: string, maxLength: number): string {
   return text.length > maxLength ? text.slice(0, maxLength).trimEnd() + "…" : text;
 }
+
+export function isValidDate(dateStr: string): boolean {
+  const d = new Date(dateStr + "T00:00:00");
+  return !isNaN(d.getTime());
+}
