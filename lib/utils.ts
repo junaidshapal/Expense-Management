@@ -68,3 +68,7 @@ export function isValidDate(dateStr: string): boolean {
 export function sumBy<T>(arr: T[], fn: (item: T) => number): number {
   return arr.reduce((acc, item) => acc + fn(item), 0);
 }
+
+export function formatPercent(value: number, decimals = 1): string {
+  return `${value.toFixed(decimals)}%`;
+}
