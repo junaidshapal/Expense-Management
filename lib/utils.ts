@@ -64,3 +64,7 @@ export function isValidDate(dateStr: string): boolean {
   const d = new Date(dateStr + "T00:00:00");
   return !isNaN(d.getTime());
 }
+
+export function sumBy<T>(arr: T[], fn: (item: T) => number): number {
+  return arr.reduce((acc, item) => acc + fn(item), 0);
+}
