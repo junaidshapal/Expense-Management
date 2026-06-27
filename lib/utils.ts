@@ -72,3 +72,11 @@ export function sumBy<T>(arr: T[], fn: (item: T) => number): number {
 export function formatPercent(value: number, decimals = 1): string {
   return `${value.toFixed(decimals)}%`;
 }
+
+export function groupBy<T>(arr: T[], key: (item: T) => string): Record<string, T[]> {
+  return arr.reduce((acc, item) => {
+    const k = key(item);
+    (acc[k] ??= []).push(item);
+    return acc;
+  }, {} as Record<string, T[]>);
+}
