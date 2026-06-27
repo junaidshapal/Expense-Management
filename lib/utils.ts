@@ -91,3 +91,12 @@ export function formatRelativeDate(dateStr: string): string {
   if (diffDays <= 7) return `${diffDays} days ago`;
   return formatDate(dateStr);
 }
+
+export function sortBy<T>(arr: T[], key: (item: T) => number | string, dir: "asc" | "desc" = "asc"): T[] {
+  return [...arr].sort((a, b) => {
+    const ka = key(a);
+    const kb = key(b);
+    const cmp = ka < kb ? -1 : ka > kb ? 1 : 0;
+    return dir === "asc" ? cmp : -cmp;
+  });
+}
