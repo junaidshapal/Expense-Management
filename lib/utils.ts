@@ -105,3 +105,7 @@ export function parseAmount(value: string): number {
   const parsed = parseFloat(value.replace(/[^\d.]/g, ""));
   return isNaN(parsed) ? 0 : Math.round(parsed * 100) / 100;
 }
+
+export function pluralize(count: number, singular: string, plural?: string): string {
+  return count === 1 ? singular : (plural ?? singular + "s");
+}
