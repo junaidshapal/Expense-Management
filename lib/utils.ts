@@ -100,3 +100,8 @@ export function sortBy<T>(arr: T[], key: (item: T) => number | string, dir: "asc
     return dir === "asc" ? cmp : -cmp;
   });
 }
+
+export function parseAmount(value: string): number {
+  const parsed = parseFloat(value.replace(/[^\d.]/g, ""));
+  return isNaN(parsed) ? 0 : Math.round(parsed * 100) / 100;
+}
