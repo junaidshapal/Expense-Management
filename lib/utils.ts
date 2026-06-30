@@ -117,3 +117,8 @@ export function debounce<T extends (...args: unknown[]) => void>(fn: T, ms: numb
     timer = setTimeout(() => fn(...args), ms);
   };
 }
+
+export function isEmpty(value: string | unknown[] | null | undefined): boolean {
+  if (value == null) return true;
+  return value.length === 0;
+}
