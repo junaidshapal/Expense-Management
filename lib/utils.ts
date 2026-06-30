@@ -122,3 +122,13 @@ export function isEmpty(value: string | unknown[] | null | undefined): boolean {
   if (value == null) return true;
   return value.length === 0;
 }
+
+export function uniqueBy<T>(arr: T[], key: (item: T) => string | number): T[] {
+  const seen = new Set<string | number>();
+  return arr.filter((item) => {
+    const k = key(item);
+    if (seen.has(k)) return false;
+    seen.add(k);
+    return true;
+  });
+}
