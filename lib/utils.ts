@@ -148,3 +148,8 @@ export function countBy<T>(arr: T[], key: (item: T) => string): Record<string, n
     return acc;
   }, {} as Record<string, number>);
 }
+
+export function average(arr: number[]): number {
+  if (arr.length === 0) return 0;
+  return arr.reduce((sum, n) => sum + n, 0) / arr.length;
+}
