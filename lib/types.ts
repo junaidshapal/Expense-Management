@@ -19,6 +19,7 @@ export type Expense = {
   date: string;
   category: ExpenseCategory;
   notes?: string;
+  createdAt?: string;
 };
 
 export type AppSettings = {
@@ -26,11 +27,21 @@ export type AppSettings = {
   personBName: string;
 };
 
+export type Settlement = {
+  id: string;
+  settledUpTo: string;
+  totalAmount: number;
+  createdAt: string;
+};
+
+export type SettledStatus = "All" | "Settled" | "Unsettled";
+
 export type ExpenseFilters = {
   startDate?: string;
   endDate?: string;
   category?: ExpenseCategory | "All";
   paidBy?: "personA" | "personB" | "All";
+  settledStatus?: SettledStatus;
 };
 
 export type SummaryData = {

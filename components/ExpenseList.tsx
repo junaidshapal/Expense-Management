@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { Expense, AppSettings, ExpenseFilters } from "@/lib/types";
-import { filterExpenses } from "@/lib/calculations";
+import { filterExpenses, isExpenseSettled } from "@/lib/calculations";
 import { formatCurrency, formatDate } from "@/lib/utils";
 import { Pencil, Trash2 } from "lucide-react";
 
@@ -23,14 +23,15 @@ interface ExpenseListProps {
   expenses: Expense[];
   settings: AppSettings;
   filters: ExpenseFilters;
+  settledAt?: string | null;
   onEdit: (expense: Expense) => void;
   onDelete: (id: string) => void;
 }
 
-export default function ExpenseList({ expenses, settings, filters, onEdit, onDelete }: ExpenseListProps) {
+export default function ExpenseList({ expenses, settings, filters, settledAt, onEdit, onDelete }: ExpenseListProps) {
   const [confirmId, setConfirmId] = useState<string | null>(null);
 
-  const filtered = filterExpenses(expenses, filters);
+  const filtered = filterExpenses(expenses, filters, settledAt);
   const sorted = [...filtered].sort((a, b) => b.date.localeCompare(a.date));
 
   if (sorted.length === 0) {
@@ -57,6 +58,7 @@ export default function ExpenseList({ expenses, settings, filters, onEdit, onDel
       {sorted.map((expense) => {
         const color = CATEGORY_COLORS[expense.category];
         const isConfirming = confirmId === expense.id;
+        const isSettled = isExpenseSettled(expense, settledAt);
 
         return (
           <div key={expense.id} className="bg-white rounded-2xl border border-gray-100/80 shadow-sm overflow-hidden transition-all duration-150 hover:shadow-md hover:border-green-100">
@@ -106,6 +108,11 @@ export default function ExpenseList({ expenses, settings, filters, onEdit, onDel
                         <span className="text-[11px] font-semibold px-2 py-0.5 rounded-full bg-green-50 text-green-700 border border-green-100">
                           {expense.paidBy === "personA" ? settings.personAName : settings.personBName}
                         </span>
+                        {isSettled && (
+                          <span className="text-[11px] font-semibold px-2 py-0.5 rounded-full bg-purple-50 text-purple-600 border border-purple-100">
+                            Settled
+                          </span>
+                        )}
                       </div>
 
                       <div className="flex items-center gap-1">

@@ -1,7 +1,7 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
-import { Expense, AppSettings, ExpenseFilters } from "@/lib/types";
+import { useState, useEffect, useCallback, useMemo } from "react";
+import { Expense, AppSettings, ExpenseFilters, Settlement } from "@/lib/types";
 import {
   getExpenses,
   getSettings,
@@ -9,7 +9,10 @@ import {
   addExpense,
   updateExpense,
   deleteExpense,
+  getLatestSettlement,
+  createSettlement,
 } from "@/lib/storage";
+import { getUnsettledExpenses } from "@/lib/calculations";
 import Navbar from "@/components/Navbar";
 import SummaryCards from "@/components/SummaryCards";
 import ExpenseForm from "@/components/ExpenseForm";
@@ -39,12 +42,30 @@ export default function HomePage() {
   const [filters, setFilters] = useState<ExpenseFilters>({
     category: "All",
     paidBy: "All",
+    settledStatus: "All",
   });
+  const [latestSettlement, setLatestSettlement] = useState<Settlement | null>(null);
 
   const refresh = useCallback(async () => {
-    const [expensesData, settingsData] = await Promise.all([getExpenses(), getSettings()]);
+    const [expensesData, settingsData, settlementData] = await Promise.all([
+      getExpenses(),
+      getSettings(),
+      getLatestSettlement(),
+    ]);
     setExpenses(expensesData);
     setSettings(settingsData);
+    setLatestSettlement(settlementData);
+  }, []);
+
+  const unsettledExpenses = useMemo(
+    () => getUnsettledExpenses(expenses, latestSettlement?.createdAt ?? null),
+    [expenses, latestSettlement]
+  );
+
+  const handleSettleUp = useCallback(async (upTo: string, totalAmount: number) => {
+    await createSettlement(upTo, totalAmount);
+    const settlementData = await getLatestSettlement();
+    setLatestSettlement(settlementData);
   }, []);
 
   useEffect(() => {
@@ -127,7 +148,7 @@ export default function HomePage() {
 
         {activeTab === "dashboard" && (
           <div key="dashboard" className="animate-fade-in">
-            <SummaryCards expenses={expenses} settings={settings} />
+            <SummaryCards expenses={unsettledExpenses} settings={settings} />
           </div>
         )}
 
@@ -152,6 +173,7 @@ export default function HomePage() {
               expenses={expenses}
               settings={settings}
               filters={filters}
+              settledAt={latestSettlement?.createdAt ?? null}
               onEdit={handleEditExpense}
               onDelete={handleDeleteExpense}
             />
@@ -160,7 +182,12 @@ export default function HomePage() {
 
         {activeTab === "settlement" && (
           <div key="settlement" className="animate-fade-in">
-            <SettlementCalculator expenses={expenses} settings={settings} />
+            <SettlementCalculator
+              expenses={expenses}
+              settings={settings}
+              settledUpTo={latestSettlement?.settledUpTo ?? null}
+              onSettleUp={handleSettleUp}
+            />
           </div>
         )}
 

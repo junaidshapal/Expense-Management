@@ -4,25 +4,32 @@ import { useState } from "react";
 import { Expense, AppSettings, SummaryData } from "@/lib/types";
 import { calculateSettlement } from "@/lib/calculations";
 import { formatCurrency, getLast15DaysRange, getTodayString } from "@/lib/utils";
-import { Calculator, Clock, CheckCircle2, AlertCircle, CalendarDays } from "lucide-react";
+import { Calculator, Clock, CheckCircle2, AlertCircle, CalendarDays, HandCoins } from "lucide-react";
 
 interface SettlementCalculatorProps {
   expenses: Expense[];
   settings: AppSettings;
+  settledUpTo?: string | null;
+  onSettleUp: (settledUpTo: string, totalAmount: number) => Promise<void>;
 }
 
 const inputClass = "w-full h-11 px-4 rounded-xl border border-gray-200 text-sm outline-none bg-white focus:border-green-400 focus:ring-2 focus:ring-green-100 transition-all";
 
-export default function SettlementCalculator({ expenses, settings }: SettlementCalculatorProps) {
+export default function SettlementCalculator({ expenses, settings, settledUpTo, onSettleUp }: SettlementCalculatorProps) {
   const today = getTodayString();
   const [startDate, setStartDate] = useState(today);
   const [endDate, setEndDate] = useState(today);
   const [result, setResult] = useState<SummaryData | null>(null);
   const [calcRange, setCalcRange] = useState<{ start: string; end: string } | null>(null);
+  const [confirmingSettle, setConfirmingSettle] = useState(false);
+  const [settling, setSettling] = useState(false);
+  const [justSettled, setJustSettled] = useState(false);
 
   function handleCalculate() {
     setResult(calculateSettlement(expenses, startDate, endDate, settings));
     setCalcRange({ start: startDate, end: endDate });
+    setConfirmingSettle(false);
+    setJustSettled(false);
   }
 
   function handleLast15Days() {
@@ -30,7 +37,20 @@ export default function SettlementCalculator({ expenses, settings }: SettlementC
     setStartDate(s); setEndDate(e);
     setResult(calculateSettlement(expenses, s, e, settings));
     setCalcRange({ start: s, end: e });
+    setConfirmingSettle(false);
+    setJustSettled(false);
   }
+
+  async function handleSettleUp() {
+    if (!calcRange || !result) return;
+    setSettling(true);
+    await onSettleUp(calcRange.end, result.total);
+    setSettling(false);
+    setConfirmingSettle(false);
+    setJustSettled(true);
+  }
+
+  const alreadySettled = !!settledUpTo && !!calcRange && calcRange.end <= settledUpTo;
 
   const fmtRange = (s: string) =>
     new Date(s + "T00:00:00").toLocaleDateString("en-PK", { day: "numeric", month: "short" });
@@ -178,6 +198,53 @@ export default function SettlementCalculator({ expenses, settings }: SettlementC
                   </p>
                 </div>
               </div>
+            )}
+
+            {/* Settle up */}
+            {alreadySettled ? (
+              <div className="flex items-center gap-2.5 rounded-2xl bg-purple-50 border border-purple-200 p-3.5 mt-2">
+                <CheckCircle2 className="h-5 w-5 text-purple-500 shrink-0" />
+                <p className="text-xs font-semibold text-purple-700">
+                  Already settled up to {calcRange && fmtRange(calcRange.end)}.
+                </p>
+              </div>
+            ) : justSettled ? (
+              <div className="flex items-center gap-2.5 rounded-2xl bg-purple-50 border border-purple-200 p-3.5 mt-2">
+                <CheckCircle2 className="h-5 w-5 text-purple-500 shrink-0" />
+                <p className="text-xs font-semibold text-purple-700">Marked as settled up to this date!</p>
+              </div>
+            ) : confirmingSettle ? (
+              <div className="rounded-2xl bg-purple-50 border border-purple-200 p-4 mt-2 space-y-3">
+                <div>
+                  <p className="text-sm font-bold text-purple-800">Settle up through {calcRange && fmtRange(calcRange.end)}?</p>
+                  <p className="text-xs text-purple-500 mt-0.5">
+                    All expenses up to this date will be marked settled. The dashboard balance will reset and only count expenses after this date.
+                  </p>
+                </div>
+                <div className="flex gap-2">
+                  <button
+                    onClick={handleSettleUp}
+                    disabled={settling}
+                    className="flex-1 h-10 rounded-xl bg-purple-600 hover:bg-purple-700 active:scale-[0.98] text-white text-sm font-bold transition-all disabled:opacity-60"
+                  >
+                    {settling ? "Settling..." : "Yes, Settle Up"}
+                  </button>
+                  <button
+                    onClick={() => setConfirmingSettle(false)}
+                    className="flex-1 h-10 rounded-xl border border-gray-200 bg-white text-gray-600 text-sm font-semibold hover:bg-gray-50 active:scale-[0.98] transition-all"
+                  >
+                    Cancel
+                  </button>
+                </div>
+              </div>
+            ) : (
+              <button
+                onClick={() => setConfirmingSettle(true)}
+                className="w-full h-12 rounded-xl border border-purple-200 bg-purple-50 text-purple-700 font-bold text-sm hover:bg-purple-100 active:scale-[0.98] transition-all flex items-center justify-center gap-2 mt-2"
+              >
+                <HandCoins className="h-4 w-4" />
+                Settle Up This Period
+              </button>
             )}
           </div>
         </div>

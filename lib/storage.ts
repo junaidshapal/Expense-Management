@@ -1,5 +1,5 @@
 import { createClient } from "@/lib/supabase/client";
-import { Expense, AppSettings } from "./types";
+import { Expense, AppSettings, Settlement } from "./types";
 
 const DEFAULT_SETTINGS: AppSettings = {
   personAName: "Jamil",
@@ -14,6 +14,7 @@ type ExpenseRow = {
   date: string;
   category: Expense["category"];
   notes: string | null;
+  created_at: string;
 };
 
 function fromRow(row: ExpenseRow): Expense {
@@ -25,6 +26,7 @@ function fromRow(row: ExpenseRow): Expense {
     date: row.date,
     category: row.category,
     notes: row.notes ?? undefined,
+    createdAt: row.created_at,
   };
 }
 
@@ -97,7 +99,56 @@ export async function saveSettings(settings: AppSettings): Promise<void> {
 
 export async function resetAllData(): Promise<void> {
   const supabase = createClient();
-  const { error } = await supabase.from("expenses").delete().neq("id", "");
+  const { error } = await supabase.from("expenses").delete().not("id", "is", null);
+  if (error) throw error;
+}
+
+type SettlementRow = {
+  id: string;
+  settled_up_to: string;
+  total_amount: number;
+  created_at: string;
+};
+
+function settlementFromRow(row: SettlementRow): Settlement {
+  return {
+    id: row.id,
+    settledUpTo: row.settled_up_to,
+    totalAmount: Number(row.total_amount),
+    createdAt: row.created_at,
+  };
+}
+
+export async function getLatestSettlement(): Promise<Settlement | null> {
+  const supabase = createClient();
+  const { data, error } = await supabase
+    .from("settlements")
+    .select("*")
+    .order("settled_up_to", { ascending: false })
+    .limit(1)
+    .maybeSingle();
+
+  if (error || !data) return null;
+  return settlementFromRow(data as SettlementRow);
+}
+
+export async function getSettlements(): Promise<Settlement[]> {
+  const supabase = createClient();
+  const { data, error } = await supabase
+    .from("settlements")
+    .select("*")
+    .order("settled_up_to", { ascending: false });
+
+  if (error) throw error;
+  return (data as SettlementRow[]).map(settlementFromRow);
+}
+
+export async function createSettlement(settledUpTo: string, totalAmount: number): Promise<void> {
+  const supabase = createClient();
+  const { error } = await supabase.from("settlements").insert({
+    settled_up_to: settledUpTo,
+    total_amount: totalAmount,
+  });
   if (error) throw error;
 }
 

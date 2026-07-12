@@ -1,13 +1,33 @@
 import { Expense, AppSettings, ExpenseFilters, SummaryData } from "./types";
 
-export function filterExpenses(expenses: Expense[], filters: ExpenseFilters): Expense[] {
+export function isExpenseSettled(expense: Expense, settledAt?: string | null): boolean {
+  if (!settledAt) return false;
+  if (!expense.createdAt) return false;
+  return expense.createdAt <= settledAt;
+}
+
+export function filterExpenses(
+  expenses: Expense[],
+  filters: ExpenseFilters,
+  settledAt?: string | null
+): Expense[] {
   return expenses.filter((expense) => {
     if (filters.startDate && expense.date < filters.startDate) return false;
     if (filters.endDate && expense.date > filters.endDate) return false;
     if (filters.category && filters.category !== "All" && expense.category !== filters.category) return false;
     if (filters.paidBy && filters.paidBy !== "All" && expense.paidBy !== filters.paidBy) return false;
+    if (filters.settledStatus && filters.settledStatus !== "All") {
+      const settled = isExpenseSettled(expense, settledAt);
+      if (filters.settledStatus === "Settled" && !settled) return false;
+      if (filters.settledStatus === "Unsettled" && settled) return false;
+    }
     return true;
   });
+}
+
+export function getUnsettledExpenses(expenses: Expense[], settledAt?: string | null): Expense[] {
+  if (!settledAt) return expenses;
+  return expenses.filter((e) => !isExpenseSettled(e, settledAt));
 }
 
 export function calculateSummary(expenses: Expense[], _settings: AppSettings): SummaryData {

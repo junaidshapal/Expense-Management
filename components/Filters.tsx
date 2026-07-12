@@ -18,7 +18,8 @@ export default function Filters({ filters, settings, onChange }: FiltersProps) {
     filters.startDate ||
     filters.endDate ||
     (filters.category && filters.category !== "All") ||
-    (filters.paidBy && filters.paidBy !== "All");
+    (filters.paidBy && filters.paidBy !== "All") ||
+    (filters.settledStatus && filters.settledStatus !== "All");
 
   return (
     <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-4 space-y-3">
@@ -31,7 +32,7 @@ export default function Filters({ filters, settings, onChange }: FiltersProps) {
         </div>
         {hasFilters && (
           <button
-            onClick={() => onChange({ category: "All", paidBy: "All" })}
+            onClick={() => onChange({ category: "All", paidBy: "All", settledStatus: "All" })}
             className="flex items-center gap-1 text-xs font-semibold text-gray-400 hover:text-red-500 active:scale-95 transition-all px-2 py-1 rounded-lg hover:bg-red-50"
           >
             <X className="h-3 w-3" />
@@ -83,6 +84,19 @@ export default function Filters({ filters, settings, onChange }: FiltersProps) {
             <option value="personB">{settings.personBName}</option>
           </select>
         </div>
+
+        <div className="col-span-2">
+          <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-1">Status</p>
+          <select
+            className={`${inputClass} cursor-pointer`}
+            value={filters.settledStatus || "All"}
+            onChange={(e) => onChange({ ...filters, settledStatus: e.target.value as "All" | "Settled" | "Unsettled" })}
+          >
+            <option value="All">All</option>
+            <option value="Unsettled">Unsettled</option>
+            <option value="Settled">Settled</option>
+          </select>
+        </div>
       </div>
 
       {/* Active filter pills */}
@@ -96,6 +110,11 @@ export default function Filters({ filters, settings, onChange }: FiltersProps) {
           {filters.paidBy && filters.paidBy !== "All" && (
             <span className="text-[10px] font-semibold px-2 py-0.5 rounded-full bg-blue-50 text-blue-600 border border-blue-100">
               {filters.paidBy === "personA" ? settings.personAName : settings.personBName}
+            </span>
+          )}
+          {filters.settledStatus && filters.settledStatus !== "All" && (
+            <span className="text-[10px] font-semibold px-2 py-0.5 rounded-full bg-purple-50 text-purple-600 border border-purple-100">
+              {filters.settledStatus}
             </span>
           )}
           {filters.startDate && (
