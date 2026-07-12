@@ -20,18 +20,12 @@ export type Expense = {
   category: ExpenseCategory;
   notes?: string;
   createdAt?: string;
+  settled: boolean;
 };
 
 export type AppSettings = {
   personAName: string;
   personBName: string;
-};
-
-export type Settlement = {
-  id: string;
-  settledUpTo: string;
-  totalAmount: number;
-  createdAt: string;
 };
 
 export type SettledStatus = "All" | "Settled" | "Unsettled";

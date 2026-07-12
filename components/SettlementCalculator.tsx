@@ -2,20 +2,19 @@
 
 import { useState } from "react";
 import { Expense, AppSettings, SummaryData } from "@/lib/types";
-import { calculateSettlement } from "@/lib/calculations";
+import { calculateSettlement, filterExpenses } from "@/lib/calculations";
 import { formatCurrency, getLast15DaysRange, getTodayString } from "@/lib/utils";
 import { Calculator, Clock, CheckCircle2, AlertCircle, CalendarDays, HandCoins } from "lucide-react";
 
 interface SettlementCalculatorProps {
   expenses: Expense[];
   settings: AppSettings;
-  settledUpTo?: string | null;
-  onSettleUp: (settledUpTo: string, totalAmount: number) => Promise<void>;
+  onSettleUp: (expenseIds: string[]) => Promise<void>;
 }
 
 const inputClass = "w-full h-11 px-4 rounded-xl border border-gray-200 text-sm outline-none bg-white focus:border-green-400 focus:ring-2 focus:ring-green-100 transition-all";
 
-export default function SettlementCalculator({ expenses, settings, settledUpTo, onSettleUp }: SettlementCalculatorProps) {
+export default function SettlementCalculator({ expenses, settings, onSettleUp }: SettlementCalculatorProps) {
   const today = getTodayString();
   const [startDate, setStartDate] = useState(today);
   const [endDate, setEndDate] = useState(today);
@@ -25,39 +24,40 @@ export default function SettlementCalculator({ expenses, settings, settledUpTo, 
   const [settling, setSettling] = useState(false);
   const [justSettled, setJustSettled] = useState(false);
 
-  function handleCalculate() {
-    setResult(calculateSettlement(expenses, startDate, endDate, settings));
-    setCalcRange({ start: startDate, end: endDate });
-    setConfirmingSettle(false);
-    setJustSettled(false);
-  }
-
-  function handleLast15Days() {
-    const { startDate: s, endDate: e } = getLast15DaysRange();
-    setStartDate(s); setEndDate(e);
+  function runCalculation(s: string, e: string) {
     setResult(calculateSettlement(expenses, s, e, settings));
     setCalcRange({ start: s, end: e });
     setConfirmingSettle(false);
     setJustSettled(false);
   }
 
+  function handleCalculate() {
+    runCalculation(startDate, endDate);
+  }
+
+  function handleLast15Days() {
+    const { startDate: s, endDate: e } = getLast15DaysRange();
+    setStartDate(s); setEndDate(e);
+    runCalculation(s, e);
+  }
+
+  const rangeExpenses = calcRange
+    ? filterExpenses(expenses, { startDate: calcRange.start, endDate: calcRange.end })
+    : [];
+  const unsettledInRange = rangeExpenses.filter((e) => !e.settled);
+  const allInRangeSettled = rangeExpenses.length > 0 && unsettledInRange.length === 0;
+
   async function handleSettleUp() {
-    if (!calcRange || !result) return;
+    if (!calcRange || unsettledInRange.length === 0) return;
     setSettling(true);
-    await onSettleUp(calcRange.end, result.total);
+    await onSettleUp(unsettledInRange.map((e) => e.id));
     setSettling(false);
     setConfirmingSettle(false);
     setJustSettled(true);
   }
 
-  const alreadySettled = !!settledUpTo && !!calcRange && calcRange.end <= settledUpTo;
-
   const fmtRange = (s: string) =>
     new Date(s + "T00:00:00").toLocaleDateString("en-PK", { day: "numeric", month: "short" });
-
-  const expenseCount = calcRange
-    ? expenses.filter(e => e.date >= calcRange.start && e.date <= calcRange.end).length
-    : 0;
 
   return (
     <div className="space-y-4">
@@ -117,7 +117,9 @@ export default function SettlementCalculator({ expenses, settings, settledUpTo, 
                 : ""}
             </p>
             <p className="text-xs text-green-600 mt-0.5 font-medium">
-              {result.total === 0 ? "No expenses in this period" : `${expenseCount} expense${expenseCount !== 1 ? "s" : ""} found`}
+              {rangeExpenses.length === 0
+                ? "No expenses in this period"
+                : `${rangeExpenses.length} expense${rangeExpenses.length !== 1 ? "s" : ""} found`}
             </p>
           </div>
 
@@ -201,24 +203,26 @@ export default function SettlementCalculator({ expenses, settings, settledUpTo, 
             )}
 
             {/* Settle up */}
-            {alreadySettled ? (
+            {rangeExpenses.length === 0 ? null : allInRangeSettled ? (
               <div className="flex items-center gap-2.5 rounded-2xl bg-purple-50 border border-purple-200 p-3.5 mt-2">
                 <CheckCircle2 className="h-5 w-5 text-purple-500 shrink-0" />
                 <p className="text-xs font-semibold text-purple-700">
-                  Already settled up to {calcRange && fmtRange(calcRange.end)}.
+                  All {rangeExpenses.length} expense{rangeExpenses.length !== 1 ? "s" : ""} in this period are already settled.
                 </p>
               </div>
             ) : justSettled ? (
               <div className="flex items-center gap-2.5 rounded-2xl bg-purple-50 border border-purple-200 p-3.5 mt-2">
                 <CheckCircle2 className="h-5 w-5 text-purple-500 shrink-0" />
-                <p className="text-xs font-semibold text-purple-700">Marked as settled up to this date!</p>
+                <p className="text-xs font-semibold text-purple-700">Marked as settled!</p>
               </div>
             ) : confirmingSettle ? (
               <div className="rounded-2xl bg-purple-50 border border-purple-200 p-4 mt-2 space-y-3">
                 <div>
-                  <p className="text-sm font-bold text-purple-800">Settle up through {calcRange && fmtRange(calcRange.end)}?</p>
+                  <p className="text-sm font-bold text-purple-800">
+                    Settle {unsettledInRange.length} expense{unsettledInRange.length !== 1 ? "s" : ""} in this period?
+                  </p>
                   <p className="text-xs text-purple-500 mt-0.5">
-                    All expenses up to this date will be marked settled. The dashboard balance will reset and only count expenses after this date.
+                    Only these {fmtRange(calcRange.start)}–{fmtRange(calcRange.end)} expenses will be marked settled and removed from the dashboard balance.
                   </p>
                 </div>
                 <div className="flex gap-2">

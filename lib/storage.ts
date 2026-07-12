@@ -1,10 +1,17 @@
 import { createClient } from "@/lib/supabase/client";
-import { Expense, AppSettings, Settlement } from "./types";
+import { Expense, AppSettings } from "./types";
 
 const DEFAULT_SETTINGS: AppSettings = {
-  personAName: "Jamil",
-  personBName: "Friend",
+  personAName: "Person A",
+  personBName: "Person B",
 };
+
+async function getUserId(): Promise<string> {
+  const supabase = createClient();
+  const { data, error } = await supabase.auth.getUser();
+  if (error || !data.user) throw new Error("Not authenticated");
+  return data.user.id;
+}
 
 type ExpenseRow = {
   id: string;
@@ -15,6 +22,7 @@ type ExpenseRow = {
   category: Expense["category"];
   notes: string | null;
   created_at: string;
+  settled: boolean;
 };
 
 function fromRow(row: ExpenseRow): Expense {
@@ -27,6 +35,7 @@ function fromRow(row: ExpenseRow): Expense {
     category: row.category,
     notes: row.notes ?? undefined,
     createdAt: row.created_at,
+    settled: row.settled,
   };
 }
 
@@ -44,7 +53,9 @@ export async function getExpenses(): Promise<Expense[]> {
 
 export async function addExpense(expense: Expense): Promise<void> {
   const supabase = createClient();
+  const userId = await getUserId();
   const { error } = await supabase.from("expenses").insert({
+    user_id: userId,
     title: expense.title,
     amount: expense.amount,
     paid_by: expense.paidBy,
@@ -66,6 +77,7 @@ export async function updateExpense(updated: Expense): Promise<void> {
       date: updated.date,
       category: updated.category,
       notes: updated.notes ?? null,
+      settled: updated.settled,
     })
     .eq("id", updated.id);
   if (error) throw error;
@@ -79,21 +91,32 @@ export async function deleteExpense(id: string): Promise<void> {
 
 export async function getSettings(): Promise<AppSettings> {
   const supabase = createClient();
+  const userId = await getUserId();
   const { data, error } = await supabase
     .from("settings")
     .select("person_a_name, person_b_name")
-    .single();
+    .eq("user_id", userId)
+    .maybeSingle();
 
-  if (error || !data) return DEFAULT_SETTINGS;
-  return { personAName: data.person_a_name, personBName: data.person_b_name };
+  if (error) throw error;
+  if (data) return { personAName: data.person_a_name, personBName: data.person_b_name };
+
+  const { error: insertError } = await supabase.from("settings").insert({
+    user_id: userId,
+    person_a_name: DEFAULT_SETTINGS.personAName,
+    person_b_name: DEFAULT_SETTINGS.personBName,
+  });
+  if (insertError) throw insertError;
+  return DEFAULT_SETTINGS;
 }
 
 export async function saveSettings(settings: AppSettings): Promise<void> {
   const supabase = createClient();
+  const userId = await getUserId();
   const { error } = await supabase
     .from("settings")
     .update({ person_a_name: settings.personAName, person_b_name: settings.personBName })
-    .eq("id", true);
+    .eq("user_id", userId);
   if (error) throw error;
 }
 
@@ -103,52 +126,10 @@ export async function resetAllData(): Promise<void> {
   if (error) throw error;
 }
 
-type SettlementRow = {
-  id: string;
-  settled_up_to: string;
-  total_amount: number;
-  created_at: string;
-};
-
-function settlementFromRow(row: SettlementRow): Settlement {
-  return {
-    id: row.id,
-    settledUpTo: row.settled_up_to,
-    totalAmount: Number(row.total_amount),
-    createdAt: row.created_at,
-  };
-}
-
-export async function getLatestSettlement(): Promise<Settlement | null> {
+export async function markExpensesSettled(ids: string[]): Promise<void> {
+  if (ids.length === 0) return;
   const supabase = createClient();
-  const { data, error } = await supabase
-    .from("settlements")
-    .select("*")
-    .order("settled_up_to", { ascending: false })
-    .limit(1)
-    .maybeSingle();
-
-  if (error || !data) return null;
-  return settlementFromRow(data as SettlementRow);
-}
-
-export async function getSettlements(): Promise<Settlement[]> {
-  const supabase = createClient();
-  const { data, error } = await supabase
-    .from("settlements")
-    .select("*")
-    .order("settled_up_to", { ascending: false });
-
-  if (error) throw error;
-  return (data as SettlementRow[]).map(settlementFromRow);
-}
-
-export async function createSettlement(settledUpTo: string, totalAmount: number): Promise<void> {
-  const supabase = createClient();
-  const { error } = await supabase.from("settlements").insert({
-    settled_up_to: settledUpTo,
-    total_amount: totalAmount,
-  });
+  const { error } = await supabase.from("expenses").update({ settled: true }).in("id", ids);
   if (error) throw error;
 }
 
@@ -163,14 +144,17 @@ export async function importData(jsonStr: string): Promise<{ expenses: Expense[]
   if (!Array.isArray(data.expenses)) throw new Error("Invalid data format");
 
   const supabase = createClient();
+  const userId = await getUserId();
   const rows = data.expenses.map((e) => ({
     id: e.id,
+    user_id: userId,
     title: e.title,
     amount: e.amount,
     paid_by: e.paidBy,
     date: e.date,
     category: e.category,
     notes: e.notes ?? null,
+    settled: e.settled ?? false,
   }));
   const { error } = await supabase.from("expenses").upsert(rows, { onConflict: "id" });
   if (error) throw error;

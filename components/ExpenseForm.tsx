@@ -75,6 +75,7 @@ export default function ExpenseForm({ settings, editingExpense, onSave, onCancel
       date: form.date,
       category: form.category as ExpenseCategory,
       notes: form.notes.trim() || undefined,
+      settled: editingExpense?.settled ?? false,
     };
 
     onSave(expense);

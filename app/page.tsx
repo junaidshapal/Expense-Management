@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect, useCallback, useMemo } from "react";
-import { Expense, AppSettings, ExpenseFilters, Settlement } from "@/lib/types";
+import { Expense, AppSettings, ExpenseFilters } from "@/lib/types";
 import {
   getExpenses,
   getSettings,
@@ -9,8 +9,7 @@ import {
   addExpense,
   updateExpense,
   deleteExpense,
-  getLatestSettlement,
-  createSettlement,
+  markExpensesSettled,
 } from "@/lib/storage";
 import { getUnsettledExpenses } from "@/lib/calculations";
 import Navbar from "@/components/Navbar";
@@ -44,28 +43,18 @@ export default function HomePage() {
     paidBy: "All",
     settledStatus: "All",
   });
-  const [latestSettlement, setLatestSettlement] = useState<Settlement | null>(null);
-
   const refresh = useCallback(async () => {
-    const [expensesData, settingsData, settlementData] = await Promise.all([
-      getExpenses(),
-      getSettings(),
-      getLatestSettlement(),
-    ]);
+    const [expensesData, settingsData] = await Promise.all([getExpenses(), getSettings()]);
     setExpenses(expensesData);
     setSettings(settingsData);
-    setLatestSettlement(settlementData);
   }, []);
 
-  const unsettledExpenses = useMemo(
-    () => getUnsettledExpenses(expenses, latestSettlement?.createdAt ?? null),
-    [expenses, latestSettlement]
-  );
+  const unsettledExpenses = useMemo(() => getUnsettledExpenses(expenses), [expenses]);
 
-  const handleSettleUp = useCallback(async (upTo: string, totalAmount: number) => {
-    await createSettlement(upTo, totalAmount);
-    const settlementData = await getLatestSettlement();
-    setLatestSettlement(settlementData);
+  const handleSettleUp = useCallback(async (expenseIds: string[]) => {
+    await markExpensesSettled(expenseIds);
+    const updated = await getExpenses();
+    setExpenses(updated);
   }, []);
 
   useEffect(() => {
@@ -173,7 +162,6 @@ export default function HomePage() {
               expenses={expenses}
               settings={settings}
               filters={filters}
-              settledAt={latestSettlement?.createdAt ?? null}
               onEdit={handleEditExpense}
               onDelete={handleDeleteExpense}
             />
@@ -185,7 +173,6 @@ export default function HomePage() {
             <SettlementCalculator
               expenses={expenses}
               settings={settings}
-              settledUpTo={latestSettlement?.settledUpTo ?? null}
               onSettleUp={handleSettleUp}
             />
           </div>
