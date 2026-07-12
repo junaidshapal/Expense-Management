@@ -101,13 +101,25 @@ export async function getSettings(): Promise<AppSettings> {
   if (error) throw error;
   if (data) return { personAName: data.person_a_name, personBName: data.person_b_name };
 
-  const { error: insertError } = await supabase.from("settings").insert({
-    user_id: userId,
-    person_a_name: DEFAULT_SETTINGS.personAName,
-    person_b_name: DEFAULT_SETTINGS.personBName,
-  });
-  if (insertError) throw insertError;
-  return DEFAULT_SETTINGS;
+  const { data: upserted, error: upsertError } = await supabase
+    .from("settings")
+    .upsert(
+      { user_id: userId, person_a_name: DEFAULT_SETTINGS.personAName, person_b_name: DEFAULT_SETTINGS.personBName },
+      { onConflict: "user_id", ignoreDuplicates: true }
+    )
+    .select("person_a_name, person_b_name")
+    .maybeSingle();
+  if (upsertError) throw upsertError;
+  if (upserted) return { personAName: upserted.person_a_name, personBName: upserted.person_b_name };
+
+  // Another concurrent call already inserted the row; fetch it.
+  const { data: existing, error: refetchError } = await supabase
+    .from("settings")
+    .select("person_a_name, person_b_name")
+    .eq("user_id", userId)
+    .single();
+  if (refetchError) throw refetchError;
+  return { personAName: existing.person_a_name, personBName: existing.person_b_name };
 }
 
 export async function saveSettings(settings: AppSettings): Promise<void> {
