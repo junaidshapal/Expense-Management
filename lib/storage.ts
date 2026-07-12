@@ -1,81 +1,129 @@
+import { createClient } from "@/lib/supabase/client";
 import { Expense, AppSettings } from "./types";
-
-const EXPENSES_KEY = "hostel_hisab_expenses";
-const SETTINGS_KEY = "hostel_hisab_settings";
 
 const DEFAULT_SETTINGS: AppSettings = {
   personAName: "Jamil",
   personBName: "Friend",
 };
 
-export function getExpenses(): Expense[] {
-  if (typeof window === "undefined") return [];
-  try {
-    const raw = localStorage.getItem(EXPENSES_KEY);
-    if (!raw) return [];
-    return JSON.parse(raw) as Expense[];
-  } catch {
-    return [];
-  }
+type ExpenseRow = {
+  id: string;
+  title: string;
+  amount: number;
+  paid_by: "personA" | "personB";
+  date: string;
+  category: Expense["category"];
+  notes: string | null;
+};
+
+function fromRow(row: ExpenseRow): Expense {
+  return {
+    id: row.id,
+    title: row.title,
+    amount: Number(row.amount),
+    paidBy: row.paid_by,
+    date: row.date,
+    category: row.category,
+    notes: row.notes ?? undefined,
+  };
 }
 
-export function saveExpenses(expenses: Expense[]): void {
-  if (typeof window === "undefined") return;
-  localStorage.setItem(EXPENSES_KEY, JSON.stringify(expenses));
+export async function getExpenses(): Promise<Expense[]> {
+  const supabase = createClient();
+  const { data, error } = await supabase
+    .from("expenses")
+    .select("*")
+    .order("date", { ascending: false })
+    .order("created_at", { ascending: false });
+
+  if (error) throw error;
+  return (data as ExpenseRow[]).map(fromRow);
 }
 
-export function addExpense(expense: Expense): Expense[] {
-  const expenses = getExpenses();
-  const updated = [expense, ...expenses];
-  saveExpenses(updated);
-  return updated;
+export async function addExpense(expense: Expense): Promise<void> {
+  const supabase = createClient();
+  const { error } = await supabase.from("expenses").insert({
+    title: expense.title,
+    amount: expense.amount,
+    paid_by: expense.paidBy,
+    date: expense.date,
+    category: expense.category,
+    notes: expense.notes ?? null,
+  });
+  if (error) throw error;
 }
 
-export function updateExpense(updated: Expense): Expense[] {
-  const expenses = getExpenses();
-  const list = expenses.map((e) => (e.id === updated.id ? updated : e));
-  saveExpenses(list);
-  return list;
+export async function updateExpense(updated: Expense): Promise<void> {
+  const supabase = createClient();
+  const { error } = await supabase
+    .from("expenses")
+    .update({
+      title: updated.title,
+      amount: updated.amount,
+      paid_by: updated.paidBy,
+      date: updated.date,
+      category: updated.category,
+      notes: updated.notes ?? null,
+    })
+    .eq("id", updated.id);
+  if (error) throw error;
 }
 
-export function deleteExpense(id: string): Expense[] {
-  const expenses = getExpenses();
-  const list = expenses.filter((e) => e.id !== id);
-  saveExpenses(list);
-  return list;
+export async function deleteExpense(id: string): Promise<void> {
+  const supabase = createClient();
+  const { error } = await supabase.from("expenses").delete().eq("id", id);
+  if (error) throw error;
 }
 
-export function getSettings(): AppSettings {
-  if (typeof window === "undefined") return DEFAULT_SETTINGS;
-  try {
-    const raw = localStorage.getItem(SETTINGS_KEY);
-    if (!raw) return DEFAULT_SETTINGS;
-    return { ...DEFAULT_SETTINGS, ...(JSON.parse(raw) as Partial<AppSettings>) };
-  } catch {
-    return DEFAULT_SETTINGS;
-  }
+export async function getSettings(): Promise<AppSettings> {
+  const supabase = createClient();
+  const { data, error } = await supabase
+    .from("settings")
+    .select("person_a_name, person_b_name")
+    .single();
+
+  if (error || !data) return DEFAULT_SETTINGS;
+  return { personAName: data.person_a_name, personBName: data.person_b_name };
 }
 
-export function saveSettings(settings: AppSettings): void {
-  if (typeof window === "undefined") return;
-  localStorage.setItem(SETTINGS_KEY, JSON.stringify(settings));
+export async function saveSettings(settings: AppSettings): Promise<void> {
+  const supabase = createClient();
+  const { error } = await supabase
+    .from("settings")
+    .update({ person_a_name: settings.personAName, person_b_name: settings.personBName })
+    .eq("id", true);
+  if (error) throw error;
 }
 
-export function resetAllData(): void {
-  if (typeof window === "undefined") return;
-  localStorage.removeItem(EXPENSES_KEY);
+export async function resetAllData(): Promise<void> {
+  const supabase = createClient();
+  const { error } = await supabase.from("expenses").delete().neq("id", "");
+  if (error) throw error;
 }
 
-export function exportData(): string {
-  const expenses = getExpenses();
-  const settings = getSettings();
+export async function exportData(): Promise<string> {
+  const expenses = await getExpenses();
+  const settings = await getSettings();
   return JSON.stringify({ expenses, settings }, null, 2);
 }
 
-export function importData(jsonStr: string): { expenses: Expense[]; settings: AppSettings } {
+export async function importData(jsonStr: string): Promise<{ expenses: Expense[]; settings: AppSettings }> {
   const data = JSON.parse(jsonStr) as { expenses: Expense[]; settings: AppSettings };
   if (!Array.isArray(data.expenses)) throw new Error("Invalid data format");
-  saveExpenses(data.expenses);
-  if (data.settings) saveSettings(data.settings);
+
+  const supabase = createClient();
+  const rows = data.expenses.map((e) => ({
+    id: e.id,
+    title: e.title,
+    amount: e.amount,
+    paid_by: e.paidBy,
+    date: e.date,
+    category: e.category,
+    notes: e.notes ?? null,
+  }));
+  const { error } = await supabase.from("expenses").upsert(rows, { onConflict: "id" });
+  if (error) throw error;
+
+  if (data.settings) await saveSettings(data.settings);
   return data;
 }

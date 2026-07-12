@@ -29,8 +29,8 @@ export default function SettingsPanel({ settings, onSettingsChange, onDataReset,
     setTimeout(() => setSaved(false), 2000);
   }
 
-  function handleExport() {
-    const blob = new Blob([exportData()], { type: "application/json" });
+  async function handleExport() {
+    const blob = new Blob([await exportData()], { type: "application/json" });
     const url = URL.createObjectURL(blob);
     const a = document.createElement("a");
     a.href = url;
@@ -44,9 +44,9 @@ export default function SettingsPanel({ settings, onSettingsChange, onDataReset,
     if (!file) return;
     setImportError("");
     const reader = new FileReader();
-    reader.onload = (ev) => {
+    reader.onload = async (ev) => {
       try {
-        importData(ev.target?.result as string);
+        await importData(ev.target?.result as string);
         onDataImport();
         e.target.value = "";
       } catch {
@@ -171,7 +171,7 @@ export default function SettingsPanel({ settings, onSettingsChange, onDataReset,
             </div>
             <div className="flex gap-2">
               <button
-                onClick={() => { resetAllData(); onDataReset(); setShowResetConfirm(false); }}
+                onClick={async () => { await resetAllData(); onDataReset(); setShowResetConfirm(false); }}
                 className="flex-1 h-10 rounded-xl bg-red-600 hover:bg-red-700 active:scale-[0.98] text-white text-sm font-bold transition-all"
               >
                 Yes, Delete All

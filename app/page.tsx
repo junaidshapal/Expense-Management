@@ -41,30 +41,38 @@ export default function HomePage() {
     paidBy: "All",
   });
 
-  useEffect(() => {
-    setExpenses(getExpenses());
-    setSettings(getSettings());
+  const refresh = useCallback(async () => {
+    const [expensesData, settingsData] = await Promise.all([getExpenses(), getSettings()]);
+    setExpenses(expensesData);
+    setSettings(settingsData);
   }, []);
 
-  const handleAddExpense = useCallback((expense: Expense) => {
-    const updated = addExpense(expense);
+  useEffect(() => {
+    refresh();
+  }, [refresh]);
+
+  const handleAddExpense = useCallback(async (expense: Expense) => {
+    await addExpense(expense);
+    const updated = await getExpenses();
     setExpenses(updated);
   }, []);
 
-  const handleUpdateExpense = useCallback((expense: Expense) => {
-    const updated = updateExpense(expense);
+  const handleUpdateExpense = useCallback(async (expense: Expense) => {
+    await updateExpense(expense);
+    const updated = await getExpenses();
     setExpenses(updated);
     setEditingExpense(null);
     setActiveTab("expenses");
   }, []);
 
-  const handleDeleteExpense = useCallback((id: string) => {
-    const updated = deleteExpense(id);
+  const handleDeleteExpense = useCallback(async (id: string) => {
+    await deleteExpense(id);
+    const updated = await getExpenses();
     setExpenses(updated);
   }, []);
 
-  const handleSaveSettings = useCallback((s: AppSettings) => {
-    saveSettings(s);
+  const handleSaveSettings = useCallback(async (s: AppSettings) => {
+    await saveSettings(s);
     setSettings(s);
   }, []);
 
@@ -73,9 +81,8 @@ export default function HomePage() {
   }, []);
 
   const handleDataImport = useCallback(() => {
-    setExpenses(getExpenses());
-    setSettings(getSettings());
-  }, []);
+    refresh();
+  }, [refresh]);
 
   const handleEditExpense = useCallback((expense: Expense) => {
     setEditingExpense(expense);
