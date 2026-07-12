@@ -1,7 +1,9 @@
 "use client";
 
-import { Home, PlusCircle, List, Calculator, Settings } from "lucide-react";
+import { useRouter } from "next/navigation";
+import { Home, PlusCircle, List, Calculator, Settings, LogOut } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { createClient } from "@/lib/supabase/client";
 
 type Tab = "dashboard" | "add" | "expenses" | "settlement" | "settings";
 
@@ -19,6 +21,15 @@ const tabs: { id: Tab; label: string; icon: React.ElementType }[] = [
 ];
 
 export default function Navbar({ activeTab, onTabChange }: NavbarProps) {
+  const router = useRouter();
+
+  async function handleLogout() {
+    const supabase = createClient();
+    await supabase.auth.signOut();
+    router.push("/login");
+    router.refresh();
+  }
+
   return (
     <>
       {/* Top header */}
@@ -32,10 +43,13 @@ export default function Navbar({ activeTab, onTabChange }: NavbarProps) {
             <p className="font-bold text-base text-green-800 leading-none tracking-tight">Hostel Hisab</p>
             <p className="text-[10px] text-green-500 mt-0.5 font-medium">Expense Tracker</p>
           </div>
-          <div className="ml-auto flex items-center gap-1.5">
-            <div className="h-2 w-2 rounded-full bg-green-400 animate-pulse" />
-            <span className="text-[10px] text-green-500 font-medium">Live</span>
-          </div>
+          <button
+            onClick={handleLogout}
+            className="ml-auto flex items-center gap-1.5 text-gray-400 hover:text-red-500 transition-colors p-1.5 -m-1.5 rounded-lg"
+            title="Log out"
+          >
+            <LogOut className="h-4 w-4" />
+          </button>
         </div>
       </header>
 
