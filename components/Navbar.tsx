@@ -1,7 +1,7 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import { Home, PlusCircle, List, Calculator, Settings, LogOut } from "lucide-react";
+import { Home, PlusCircle, List, Calculator, Settings, LogOut, Wallet } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { createClient } from "@/lib/supabase/client";
 
@@ -33,29 +33,28 @@ export default function Navbar({ activeTab, onTabChange }: NavbarProps) {
   return (
     <>
       {/* Top header */}
-      <header className="sticky top-0 z-40 w-full bg-white/90 backdrop-blur-md border-b border-green-100/80 shadow-sm">
-        <div className="flex h-14 items-center px-4 gap-3">
-          <div className="relative flex items-center justify-center w-9 h-9 rounded-xl bg-gradient-to-br from-green-500 to-green-700 shadow-md shadow-green-200">
-            <span className="text-lg leading-none">💰</span>
-            <div className="absolute inset-0 rounded-xl bg-white/10" />
+      <header className="sticky top-0 z-40 w-full bg-green-600">
+        <div className="flex h-14 items-center px-4 gap-2.5">
+          <div className="flex items-center justify-center w-8 h-8 rounded-md bg-white/15 shrink-0">
+            <Wallet className="h-4 w-4 text-white" strokeWidth={2} />
           </div>
-          <div>
-            <p className="font-bold text-base text-green-800 leading-none tracking-tight">Hostel Hisab</p>
-            <p className="text-[10px] text-green-500 mt-0.5 font-medium">Expense Tracker</p>
+          <div className="min-w-0">
+            <p className="font-semibold text-sm text-white leading-tight truncate">Hostel Hisab</p>
+            <p className="text-[11px] text-green-100 leading-tight">Expense Tracker</p>
           </div>
           <button
             onClick={handleLogout}
-            className="ml-auto flex items-center gap-1.5 text-gray-400 hover:text-red-500 transition-colors p-1.5 -m-1.5 rounded-lg"
+            className="ml-auto flex items-center justify-center w-8 h-8 rounded-md text-green-100 hover:text-white hover:bg-white/15 transition-colors shrink-0"
             title="Log out"
           >
-            <LogOut className="h-4 w-4" />
+            <LogOut className="h-4 w-4" strokeWidth={2} />
           </button>
         </div>
       </header>
 
       {/* Bottom navigation */}
-      <nav className="fixed bottom-0 left-0 right-0 z-40 bg-white/95 backdrop-blur-md border-t border-green-100 shadow-[0_-4px_20px_rgba(0,0,0,0.08)]">
-        <div className="flex items-center justify-around h-[62px] max-w-[430px] mx-auto px-1">
+      <nav className="fixed bottom-0 left-0 right-0 z-40 bg-white/95 backdrop-blur-sm border-t border-gray-200">
+        <div className="flex items-center justify-around h-[58px] max-w-[430px] mx-auto px-1">
           {tabs.map(({ id, label, icon: Icon }) => {
             const isActive = activeTab === id;
             return (
@@ -63,27 +62,22 @@ export default function Navbar({ activeTab, onTabChange }: NavbarProps) {
                 key={id}
                 onClick={() => onTabChange(id)}
                 className={cn(
-                  "relative flex flex-col items-center justify-center gap-0.5 flex-1 h-full text-[10px] font-semibold transition-all duration-200 active:scale-95",
-                  isActive ? "text-green-700" : "text-gray-400 hover:text-green-500"
+                  "relative flex flex-col items-center justify-center gap-0.5 flex-1 h-full text-[10px] font-medium transition-colors",
+                  isActive ? "text-green-700" : "text-gray-400 hover:text-gray-600"
                 )}
               >
-                {/* Active background pill */}
-                {isActive && (
-                  <div className="nav-active-pill absolute top-2 left-1/2 -translate-x-1/2 w-12 h-7 rounded-full bg-green-100" />
-                )}
-                <div className="relative flex items-center justify-center w-12 h-7">
+                <div
+                  className={cn(
+                    "flex items-center justify-center w-11 h-6 rounded-md",
+                    isActive && "nav-active-pill bg-green-600"
+                  )}
+                >
                   <Icon
-                    className={cn(
-                      "h-[18px] w-[18px] transition-all duration-200",
-                      isActive ? "stroke-[2.5px] text-green-600" : "stroke-[1.8px]"
-                    )}
+                    className={cn("h-[18px] w-[18px]", isActive ? "text-white" : "")}
+                    strokeWidth={isActive ? 2.25 : 1.75}
                   />
                 </div>
-                <span className={cn("transition-all duration-200", isActive ? "text-green-700" : "")}>{label}</span>
-                {/* Active dot indicator */}
-                {isActive && (
-                  <div className="absolute bottom-1.5 left-1/2 -translate-x-1/2 w-1 h-1 rounded-full bg-green-500" />
-                )}
+                <span>{label}</span>
               </button>
             );
           })}

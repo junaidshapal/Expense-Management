@@ -7,8 +7,6 @@ import {
   getSettings,
   saveSettings,
   addExpense,
-  updateExpense,
-  deleteExpense,
   markExpensesSettled,
 } from "@/lib/storage";
 import { getUnsettledExpenses } from "@/lib/calculations";
@@ -19,15 +17,16 @@ import ExpenseList from "@/components/ExpenseList";
 import Filters from "@/components/Filters";
 import SettlementCalculator from "@/components/SettlementCalculator";
 import SettingsPanel from "@/components/SettingsPanel";
+import { LayoutDashboard, PlusCircle, List, Calculator, Settings, type LucideIcon } from "lucide-react";
 
 type Tab = "dashboard" | "add" | "expenses" | "settlement" | "settings";
 
-const PAGE_META: Record<Tab, { title: string; subtitle: string; emoji: string }> = {
-  dashboard:  { title: "Dashboard",       subtitle: "Overview of shared expenses",   emoji: "📊" },
-  add:        { title: "Add Expense",     subtitle: "Record a new shared expense",   emoji: "➕" },
-  expenses:   { title: "Expense History", subtitle: "All recorded expenses",         emoji: "🗒️" },
-  settlement: { title: "Settlement",      subtitle: "Calculate who owes whom",       emoji: "🤝" },
-  settings:   { title: "Settings",        subtitle: "Manage names and data",         emoji: "⚙️" },
+const PAGE_META: Record<Tab, { title: string; subtitle: string; icon: LucideIcon }> = {
+  dashboard:  { title: "Dashboard",       subtitle: "Overview of shared expenses",   icon: LayoutDashboard },
+  add:        { title: "Add expense",     subtitle: "Record a new shared expense",   icon: PlusCircle },
+  expenses:   { title: "Expense history", subtitle: "All recorded expenses",         icon: List },
+  settlement: { title: "Settlement",      subtitle: "Calculate who owes whom",       icon: Calculator },
+  settings:   { title: "Settings",        subtitle: "Manage names and data",         icon: Settings },
 };
 
 export default function HomePage() {
@@ -37,12 +36,12 @@ export default function HomePage() {
     personAName: "Jamil",
     personBName: "Friend",
   });
-  const [editingExpense, setEditingExpense] = useState<Expense | null>(null);
   const [filters, setFilters] = useState<ExpenseFilters>({
     category: "All",
     paidBy: "All",
     settledStatus: "All",
   });
+
   const refresh = useCallback(async () => {
     const [expensesData, settingsData] = await Promise.all([getExpenses(), getSettings()]);
     setExpenses(expensesData);
@@ -67,20 +66,6 @@ export default function HomePage() {
     setExpenses(updated);
   }, []);
 
-  const handleUpdateExpense = useCallback(async (expense: Expense) => {
-    await updateExpense(expense);
-    const updated = await getExpenses();
-    setExpenses(updated);
-    setEditingExpense(null);
-    setActiveTab("expenses");
-  }, []);
-
-  const handleDeleteExpense = useCallback(async (id: string) => {
-    await deleteExpense(id);
-    const updated = await getExpenses();
-    setExpenses(updated);
-  }, []);
-
   const handleSaveSettings = useCallback(async (s: AppSettings) => {
     await saveSettings(s);
     setSettings(s);
@@ -94,44 +79,26 @@ export default function HomePage() {
     refresh();
   }, [refresh]);
 
-  const handleEditExpense = useCallback((expense: Expense) => {
-    setEditingExpense(expense);
-    setActiveTab("add");
-  }, []);
-
-  const handleSaveForm = useCallback(
-    (expense: Expense) => {
-      if (editingExpense) {
-        handleUpdateExpense(expense);
-      } else {
-        handleAddExpense(expense);
-      }
-    },
-    [editingExpense, handleUpdateExpense, handleAddExpense]
-  );
-
   const handleTabChange = useCallback((tab: Tab) => {
     setActiveTab(tab);
-    if (tab !== "add") setEditingExpense(null);
   }, []);
 
-  const meta = editingExpense && activeTab === "add"
-    ? { title: "Edit Expense", subtitle: "Update expense details", emoji: "✏️" }
-    : PAGE_META[activeTab];
+  const meta = PAGE_META[activeTab];
+  const MetaIcon = meta.icon;
 
   return (
     <div className="flex flex-col min-h-screen">
       <Navbar activeTab={activeTab} onTabChange={handleTabChange} />
 
-      <main className="flex-1 px-4 pt-4 pb-28 w-full">
+      <main className="flex-1 px-4 pt-4 pb-24 w-full">
         {/* Page header */}
         <div className="flex items-center gap-2.5 mb-4 animate-fade-in">
-          <div className="w-8 h-8 rounded-xl bg-gradient-to-br from-green-500 to-green-700 flex items-center justify-center shadow-sm shadow-green-200 text-base leading-none shrink-0">
-            {meta.emoji}
+          <div className="w-8 h-8 rounded-md bg-green-600 flex items-center justify-center shrink-0">
+            <MetaIcon className="h-4 w-4 text-white" strokeWidth={2} />
           </div>
-          <div>
-            <h1 className="text-base font-bold text-gray-900 leading-tight">{meta.title}</h1>
-            <p className="text-[11px] text-gray-400 font-medium">{meta.subtitle}</p>
+          <div className="min-w-0">
+            <h1 className="text-[15px] font-semibold text-gray-900 leading-tight truncate">{meta.title}</h1>
+            <p className="text-xs text-gray-400 leading-tight">{meta.subtitle}</p>
           </div>
         </div>
 
@@ -143,28 +110,14 @@ export default function HomePage() {
 
         {activeTab === "add" && (
           <div key="add" className="animate-fade-in">
-            <ExpenseForm
-              settings={settings}
-              editingExpense={editingExpense}
-              onSave={handleSaveForm}
-              onCancelEdit={() => {
-                setEditingExpense(null);
-                setActiveTab("expenses");
-              }}
-            />
+            <ExpenseForm settings={settings} onSave={handleAddExpense} />
           </div>
         )}
 
         {activeTab === "expenses" && (
           <div key="expenses" className="animate-fade-in space-y-3">
             <Filters filters={filters} settings={settings} onChange={setFilters} />
-            <ExpenseList
-              expenses={expenses}
-              settings={settings}
-              filters={filters}
-              onEdit={handleEditExpense}
-              onDelete={handleDeleteExpense}
-            />
+            <ExpenseList expenses={expenses} settings={settings} filters={filters} />
           </div>
         )}
 

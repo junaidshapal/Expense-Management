@@ -23,7 +23,7 @@
     --border: 140 20% 88%;
     --input: 140 20% 88%;
     --ring: 142 71% 35%;
-    --radius: 0.75rem;
+    --radius: 0.625rem;
   }
 }
 
@@ -33,11 +33,10 @@
   }
 
   body {
-    @apply text-foreground;
+    @apply text-foreground bg-gray-50;
     font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
-    background: linear-gradient(135deg, #f0fdf4 0%, #dcfce7 50%, #bbf7d0 100%);
     min-height: 100vh;
   }
 }
@@ -58,7 +57,7 @@ html {
   background: transparent;
 }
 ::-webkit-scrollbar-thumb {
-  background: #86efac;
+  background: #d1d5db;
   border-radius: 4px;
 }
 
@@ -66,7 +65,7 @@ html {
 @keyframes fadeSlideIn {
   from {
     opacity: 0;
-    transform: translateY(8px);
+    transform: translateY(6px);
   }
   to {
     opacity: 1;
@@ -75,28 +74,16 @@ html {
 }
 
 .animate-fade-in {
-  animation: fadeSlideIn 0.22s ease-out both;
+  animation: fadeSlideIn 0.18s ease-out both;
 }
 
 /* Pop animation for active nav indicator */
 @keyframes navPop {
   0% { transform: scale(0.85); opacity: 0; }
-  60% { transform: scale(1.08); }
+  60% { transform: scale(1.05); }
   100% { transform: scale(1); opacity: 1; }
 }
 
 .nav-active-pill {
-  animation: navPop 0.2s ease-out both;
-}
-
-/* Shimmer for hero card */
-@keyframes shimmer {
-  0% { background-position: -200% 0; }
-  100% { background-position: 200% 0; }
-}
-
-.shimmer {
-  background: linear-gradient(90deg, transparent 25%, rgba(255,255,255,0.18) 50%, transparent 75%);
-  background-size: 200% 100%;
-  animation: shimmer 2.4s infinite;
+  animation: navPop 0.18s ease-out both;
 }

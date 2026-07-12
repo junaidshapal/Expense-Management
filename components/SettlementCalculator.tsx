@@ -3,8 +3,8 @@
 import { useState } from "react";
 import { Expense, AppSettings, SummaryData } from "@/lib/types";
 import { calculateSettlement, filterExpenses } from "@/lib/calculations";
-import { formatCurrency, getLast15DaysRange, getTodayString } from "@/lib/utils";
-import { Calculator, Clock, CheckCircle2, AlertCircle, CalendarDays, HandCoins } from "lucide-react";
+import { formatCurrency, getLast15DaysRange, getTodayString, cn } from "@/lib/utils";
+import { Calculator, Clock, CheckCircle2, CalendarDays, HandCoins } from "lucide-react";
 
 interface SettlementCalculatorProps {
   expenses: Expense[];
@@ -12,7 +12,8 @@ interface SettlementCalculatorProps {
   onSettleUp: (expenseIds: string[]) => Promise<void>;
 }
 
-const inputClass = "w-full h-11 px-4 rounded-xl border border-gray-200 text-sm outline-none bg-white focus:border-green-400 focus:ring-2 focus:ring-green-100 transition-all";
+const inputClass =
+  "w-full h-10 px-3.5 rounded-md border border-gray-200 text-sm outline-none bg-white focus:border-green-500 focus:ring-2 focus:ring-green-500/15 transition-colors";
 
 export default function SettlementCalculator({ expenses, settings, onSettleUp }: SettlementCalculatorProps) {
   const today = getTodayString();
@@ -60,63 +61,63 @@ export default function SettlementCalculator({ expenses, settings, onSettleUp }:
     new Date(s + "T00:00:00").toLocaleDateString("en-PK", { day: "numeric", month: "short" });
 
   return (
-    <div className="space-y-4">
+    <div className="space-y-3">
       {/* Date range picker */}
-      <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-4 space-y-4">
+      <div className="bg-white rounded-lg border border-gray-200 p-4 space-y-4">
         <div className="flex items-center gap-2.5">
-          <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-green-100 to-green-200 flex items-center justify-center shadow-sm">
-            <Calculator className="h-4.5 w-4.5 text-green-700" />
+          <div className="w-8 h-8 rounded-md bg-green-600 flex items-center justify-center shrink-0">
+            <Calculator className="h-4 w-4 text-white" strokeWidth={2} />
           </div>
-          <div>
-            <p className="font-bold text-gray-800 text-sm">Select Date Range</p>
-            <p className="text-[10px] text-gray-400 font-medium">Pick dates to calculate hisab</p>
+          <div className="min-w-0">
+            <p className="font-medium text-gray-900 text-sm">Select date range</p>
+            <p className="text-xs text-gray-400">Pick dates to calculate hisab</p>
           </div>
         </div>
 
-        <div className="grid grid-cols-2 gap-3">
-          <div>
-            <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-1.5 flex items-center gap-1">
-              <CalendarDays className="h-3 w-3" /> From
+        <div className="grid grid-cols-1 min-[420px]:grid-cols-2 gap-3">
+          <div className="min-w-0">
+            <p className="text-xs font-medium text-gray-500 mb-1.5 flex items-center gap-1">
+              <CalendarDays className="h-3 w-3" strokeWidth={2} /> From
             </p>
             <input type="date" className={inputClass} value={startDate} onChange={(e) => setStartDate(e.target.value)} />
           </div>
-          <div>
-            <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-1.5 flex items-center gap-1">
-              <CalendarDays className="h-3 w-3" /> To
+          <div className="min-w-0">
+            <p className="text-xs font-medium text-gray-500 mb-1.5 flex items-center gap-1">
+              <CalendarDays className="h-3 w-3" strokeWidth={2} /> To
             </p>
             <input type="date" className={inputClass} value={endDate} onChange={(e) => setEndDate(e.target.value)} />
           </div>
         </div>
 
-        <div className="flex gap-3">
+        <div className="flex gap-2.5">
           <button
             onClick={handleCalculate}
-            className="flex-1 h-12 rounded-xl bg-gradient-to-b from-green-500 to-green-700 hover:from-green-600 hover:to-green-800 active:scale-[0.98] text-white font-bold text-sm transition-all shadow-md shadow-green-200"
+            className="flex-1 h-10 rounded-md bg-green-600 hover:bg-green-700 active:bg-green-800 text-white font-medium text-sm transition-colors"
           >
-            Calculate Hisab
+            Calculate hisab
           </button>
           <button
             onClick={handleLast15Days}
-            className="h-12 px-4 rounded-xl border border-green-200 bg-green-50 text-green-700 font-semibold text-sm hover:bg-green-100 active:scale-[0.98] transition-all flex items-center gap-2"
+            className="h-10 px-3.5 rounded-md border border-gray-200 bg-white text-gray-700 font-medium text-sm hover:bg-gray-50 transition-colors flex items-center gap-1.5 shrink-0"
           >
-            <Clock className="h-4 w-4" />
-            15 Days
+            <Clock className="h-4 w-4" strokeWidth={2} />
+            15 days
           </button>
         </div>
       </div>
 
       {/* Results */}
       {result && calcRange && (
-        <div className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
+        <div className="bg-white rounded-lg border border-gray-200 overflow-hidden">
           {/* Header */}
-          <div className="bg-gradient-to-r from-green-50 to-emerald-50 border-b border-green-100 px-4 py-3.5">
-            <p className="font-bold text-green-800 text-sm">
+          <div className="bg-gray-50 border-b border-gray-200 px-4 py-3">
+            <p className="font-medium text-gray-900 text-sm">
               {fmtRange(calcRange.start)} — {fmtRange(calcRange.end)}
               {new Date(calcRange.end + "T00:00:00").getFullYear() !== new Date().getFullYear()
                 ? `, ${new Date(calcRange.end + "T00:00:00").getFullYear()}`
                 : ""}
             </p>
-            <p className="text-xs text-green-600 mt-0.5 font-medium">
+            <p className="text-xs text-gray-500 mt-0.5">
               {rangeExpenses.length === 0
                 ? "No expenses in this period"
                 : `${rangeExpenses.length} expense${rangeExpenses.length !== 1 ? "s" : ""} found`}
@@ -127,45 +128,48 @@ export default function SettlementCalculator({ expenses, settings, onSettleUp }:
             {/* Breakdown rows */}
             <div className="space-y-2.5">
               {[
-                { label: "Total Expenses", value: result.total, bold: true },
-                { label: "Each Person's Share", value: result.sharePerPerson, bold: false },
+                { label: "Total expenses", value: result.total, bold: true },
+                { label: "Each person's share", value: result.sharePerPerson, bold: false },
               ].map(({ label, value, bold }) => (
                 <div key={label} className="flex justify-between items-center">
                   <p className="text-sm text-gray-500">{label}</p>
-                  <p className={`text-sm ${bold ? "font-extrabold text-gray-900" : "font-semibold text-gray-700"}`}>
+                  <p className={cn("text-sm", bold ? "font-semibold text-gray-900" : "font-medium text-gray-700")}>
                     {formatCurrency(value)}
                   </p>
                 </div>
               ))}
 
-              <div className="h-px bg-gradient-to-r from-transparent via-gray-100 to-transparent" />
+              <div className="h-px bg-gray-100" />
 
               {[
-                { name: settings.personAName, value: result.personAPaid, initial: settings.personAName.charAt(0), color: "from-green-500 to-green-700", shadow: "shadow-green-200" },
-                { name: settings.personBName, value: result.personBPaid, initial: settings.personBName.charAt(0), color: "from-emerald-400 to-teal-500", shadow: "shadow-emerald-200" },
-              ].map(({ name, value, initial, color, shadow }) => (
+                { name: settings.personAName, value: result.personAPaid, initial: settings.personAName.charAt(0), accent: "bg-green-600" },
+                { name: settings.personBName, value: result.personBPaid, initial: settings.personBName.charAt(0), accent: "bg-teal-600" },
+              ].map(({ name, value, initial, accent }) => (
                 <div key={name} className="flex justify-between items-center">
-                  <div className="flex items-center gap-2">
-                    <div className={`w-6 h-6 rounded-full bg-gradient-to-br ${color} flex items-center justify-center text-white text-[10px] font-bold shadow-sm ${shadow}`}>
+                  <div className="flex items-center gap-2 min-w-0">
+                    <div className={cn("w-6 h-6 rounded-full flex items-center justify-center text-white text-[10px] font-semibold shrink-0", accent)}>
                       {initial}
                     </div>
-                    <p className="text-sm text-gray-600 font-medium">{name} paid</p>
+                    <p className="text-sm text-gray-600 truncate">{name} paid</p>
                   </div>
-                  <p className="text-sm font-bold text-gray-800">{formatCurrency(value)}</p>
+                  <p className="text-sm font-semibold text-gray-800 shrink-0">{formatCurrency(value)}</p>
                 </div>
               ))}
 
-              <div className="h-px bg-gradient-to-r from-transparent via-gray-100 to-transparent" />
+              <div className="h-px bg-gray-100" />
 
               {[
                 { label: `${settings.personAName} balance`, value: result.personABalance },
                 { label: `${settings.personBName} balance`, value: result.personBBalance },
               ].map(({ label, value }) => (
                 <div key={label} className="flex justify-between items-center">
-                  <p className="text-xs text-gray-400 font-medium">{label}</p>
-                  <span className={`text-xs font-bold px-2 py-0.5 rounded-full ${
-                    value >= 0 ? "bg-green-50 text-green-700" : "bg-red-50 text-red-600"
-                  }`}>
+                  <p className="text-xs text-gray-400">{label}</p>
+                  <span
+                    className={cn(
+                      "text-xs font-medium px-2 py-0.5 rounded-full",
+                      value >= 0 ? "bg-green-50 text-green-700" : "bg-red-50 text-red-600"
+                    )}
+                  >
                     {value >= 0 ? "+" : ""}{formatCurrency(value)}
                   </span>
                 </div>
@@ -174,54 +178,49 @@ export default function SettlementCalculator({ expenses, settings, onSettleUp }:
 
             {/* Final verdict */}
             {result.isSettled ? (
-              <div className="relative overflow-hidden flex items-center gap-3 rounded-2xl bg-gradient-to-br from-green-500 to-green-700 p-4 mt-2 shadow-md shadow-green-200">
-                <div className="absolute inset-0 shimmer pointer-events-none" />
-                <CheckCircle2 className="h-7 w-7 text-white shrink-0 relative" />
-                <div className="relative">
-                  <p className="font-bold text-white text-base">All Settled!</p>
-                  <p className="text-green-100 text-xs mt-0.5">No outstanding balance for this period.</p>
+              <div className="flex items-center gap-3 rounded-lg bg-green-50 border border-green-200 p-3.5 mt-2">
+                <CheckCircle2 className="h-6 w-6 text-green-600 shrink-0" strokeWidth={2} />
+                <div>
+                  <p className="font-semibold text-green-900 text-sm">All settled</p>
+                  <p className="text-green-700/80 text-xs mt-0.5">No outstanding balance for this period.</p>
                 </div>
               </div>
             ) : (
-              <div className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-amber-500 via-orange-500 to-orange-600 p-4 mt-2 text-white shadow-md shadow-orange-200">
-                <div className="absolute inset-0 shimmer pointer-events-none" />
-                <div className="absolute -top-4 -right-4 w-20 h-20 rounded-full bg-white/10" />
-                <div className="relative">
-                  <p className="text-xs font-semibold text-white/80 uppercase tracking-wider mb-1">To Pay</p>
-                  <p className="text-3xl font-extrabold tracking-tight">{formatCurrency(result.amountOwed)}</p>
-                  <p className="text-sm font-medium text-white/85 mt-1">
-                    <span className="font-bold text-white">
-                      {result.debtor === "personA" ? settings.personAName : settings.personBName}
-                    </span>
-                    {" "}owes{" "}
-                    <span className="font-bold text-white">
-                      {result.creditor === "personA" ? settings.personAName : settings.personBName}
-                    </span>
-                  </p>
-                </div>
+              <div className="rounded-lg bg-amber-50 border border-amber-200 p-4 mt-2">
+                <p className="text-[11px] font-medium text-amber-700 uppercase tracking-wide mb-1">To pay</p>
+                <p className="text-2xl font-semibold text-amber-900 tracking-tight">{formatCurrency(result.amountOwed)}</p>
+                <p className="text-sm text-amber-800/90 mt-1">
+                  <span className="font-semibold">
+                    {result.debtor === "personA" ? settings.personAName : settings.personBName}
+                  </span>
+                  {" "}owes{" "}
+                  <span className="font-semibold">
+                    {result.creditor === "personA" ? settings.personAName : settings.personBName}
+                  </span>
+                </p>
               </div>
             )}
 
             {/* Settle up */}
             {rangeExpenses.length === 0 ? null : allInRangeSettled ? (
-              <div className="flex items-center gap-2.5 rounded-2xl bg-purple-50 border border-purple-200 p-3.5 mt-2">
-                <CheckCircle2 className="h-5 w-5 text-purple-500 shrink-0" />
-                <p className="text-xs font-semibold text-purple-700">
+              <div className="flex items-center gap-2.5 rounded-lg bg-violet-50 border border-violet-200 p-3.5 mt-2">
+                <CheckCircle2 className="h-4.5 w-4.5 text-violet-600 shrink-0" strokeWidth={2} />
+                <p className="text-xs font-medium text-violet-700">
                   All {rangeExpenses.length} expense{rangeExpenses.length !== 1 ? "s" : ""} in this period are already settled.
                 </p>
               </div>
             ) : justSettled ? (
-              <div className="flex items-center gap-2.5 rounded-2xl bg-purple-50 border border-purple-200 p-3.5 mt-2">
-                <CheckCircle2 className="h-5 w-5 text-purple-500 shrink-0" />
-                <p className="text-xs font-semibold text-purple-700">Marked as settled!</p>
+              <div className="flex items-center gap-2.5 rounded-lg bg-violet-50 border border-violet-200 p-3.5 mt-2">
+                <CheckCircle2 className="h-4.5 w-4.5 text-violet-600 shrink-0" strokeWidth={2} />
+                <p className="text-xs font-medium text-violet-700">Marked as settled.</p>
               </div>
             ) : confirmingSettle ? (
-              <div className="rounded-2xl bg-purple-50 border border-purple-200 p-4 mt-2 space-y-3">
+              <div className="rounded-lg bg-violet-50 border border-violet-200 p-4 mt-2 space-y-3">
                 <div>
-                  <p className="text-sm font-bold text-purple-800">
+                  <p className="text-sm font-semibold text-violet-900">
                     Settle {unsettledInRange.length} expense{unsettledInRange.length !== 1 ? "s" : ""} in this period?
                   </p>
-                  <p className="text-xs text-purple-500 mt-0.5">
+                  <p className="text-xs text-violet-700/80 mt-0.5">
                     Only these {fmtRange(calcRange.start)}–{fmtRange(calcRange.end)} expenses will be marked settled and removed from the dashboard balance.
                   </p>
                 </div>
@@ -229,13 +228,13 @@ export default function SettlementCalculator({ expenses, settings, onSettleUp }:
                   <button
                     onClick={handleSettleUp}
                     disabled={settling}
-                    className="flex-1 h-10 rounded-xl bg-purple-600 hover:bg-purple-700 active:scale-[0.98] text-white text-sm font-bold transition-all disabled:opacity-60"
+                    className="flex-1 h-9 rounded-md bg-violet-600 hover:bg-violet-700 text-white text-sm font-medium transition-colors disabled:opacity-60"
                   >
-                    {settling ? "Settling..." : "Yes, Settle Up"}
+                    {settling ? "Settling..." : "Yes, settle up"}
                   </button>
                   <button
                     onClick={() => setConfirmingSettle(false)}
-                    className="flex-1 h-10 rounded-xl border border-gray-200 bg-white text-gray-600 text-sm font-semibold hover:bg-gray-50 active:scale-[0.98] transition-all"
+                    className="flex-1 h-9 rounded-md border border-gray-200 bg-white text-gray-600 text-sm font-medium hover:bg-gray-50 transition-colors"
                   >
                     Cancel
                   </button>
@@ -244,10 +243,10 @@ export default function SettlementCalculator({ expenses, settings, onSettleUp }:
             ) : (
               <button
                 onClick={() => setConfirmingSettle(true)}
-                className="w-full h-12 rounded-xl border border-purple-200 bg-purple-50 text-purple-700 font-bold text-sm hover:bg-purple-100 active:scale-[0.98] transition-all flex items-center justify-center gap-2 mt-2"
+                className="w-full h-10 rounded-md border border-violet-200 bg-violet-50 text-violet-700 font-medium text-sm hover:bg-violet-100 transition-colors flex items-center justify-center gap-2 mt-2"
               >
-                <HandCoins className="h-4 w-4" />
-                Settle Up This Period
+                <HandCoins className="h-4 w-4" strokeWidth={2} />
+                Settle up this period
               </button>
             )}
           </div>

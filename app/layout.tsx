@@ -16,7 +16,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
   return (
     <html lang="en">
       <body className="min-h-screen bg-background antialiased">
-        <div className="relative mx-auto min-h-screen w-full max-w-[430px] bg-white shadow-2xl">
+        <div className="relative mx-auto min-h-screen w-full max-w-[430px] bg-white sm:shadow-sm sm:border-x sm:border-gray-200">
           {children}
         </div>
       </body>
