@@ -135,6 +135,7 @@ export default function HomePage() {
           <div key="settings" className="animate-fade-in">
             <SettingsPanel
               settings={settings}
+              expenseCount={expenses.length}
               onSettingsChange={handleSaveSettings}
               onDataReset={handleDataReset}
               onDataImport={handleDataImport}

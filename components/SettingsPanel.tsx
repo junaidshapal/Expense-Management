@@ -8,6 +8,7 @@ import { Download, Upload, Trash2, Save, Users, AlertTriangle, CheckCircle2, Shi
 
 interface SettingsPanelProps {
   settings: AppSettings;
+  expenseCount: number;
   onSettingsChange: (s: AppSettings) => void;
   onDataReset: () => void;
   onDataImport: () => void;
@@ -17,7 +18,7 @@ const inputClass =
   "w-full h-10 px-3.5 rounded-md border border-gray-200 text-sm outline-none bg-white focus:border-green-500 focus:ring-2 focus:ring-green-500/15 transition-colors";
 const labelClass = "block text-xs font-medium text-gray-500 mb-1.5";
 
-export default function SettingsPanel({ settings, onSettingsChange, onDataReset, onDataImport }: SettingsPanelProps) {
+export default function SettingsPanel({ settings, expenseCount, onSettingsChange, onDataReset, onDataImport }: SettingsPanelProps) {
   const [personAName, setPersonAName] = useState(settings.personAName);
   const [personBName, setPersonBName] = useState(settings.personBName);
   const [saved, setSaved] = useState(false);
@@ -128,7 +129,8 @@ export default function SettingsPanel({ settings, onSettingsChange, onDataReset,
 
         <button
           onClick={handleExport}
-          className="w-full h-10 rounded-md border border-gray-200 bg-white text-gray-700 font-medium text-sm hover:bg-gray-50 transition-colors flex items-center justify-center gap-2"
+          disabled={expenseCount === 0}
+          className="w-full h-10 rounded-md border border-gray-200 bg-white text-gray-700 font-medium text-sm hover:bg-gray-50 transition-colors flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:bg-white"
         >
           <Download className="h-4 w-4" strokeWidth={2} />
           Export as JSON
