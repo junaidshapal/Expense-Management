@@ -134,7 +134,8 @@ export async function saveSettings(settings: AppSettings): Promise<void> {
 
 export async function resetAllData(): Promise<void> {
   const supabase = createClient();
-  const { error } = await supabase.from("expenses").delete().not("id", "is", null);
+  const userId = await getUserId();
+  const { error } = await supabase.from("expenses").delete().eq("user_id", userId);
   if (error) throw error;
 }
 
