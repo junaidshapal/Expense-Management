@@ -57,8 +57,15 @@ export default function SettlementCalculator({ expenses, settings, onSettleUp }:
     setJustSettled(true);
   }
 
-  const fmtRange = (s: string) =>
-    new Date(s + "T00:00:00").toLocaleDateString("en-PK", { day: "numeric", month: "short" });
+  const fmtRange = (s: string) => {
+    const date = new Date(s + "T00:00:00");
+    const includeYear = date.getFullYear() !== new Date().getFullYear();
+    return date.toLocaleDateString("en-PK", {
+      day: "numeric",
+      month: "short",
+      ...(includeYear && { year: "numeric" }),
+    });
+  };
 
   return (
     <div className="space-y-3">
@@ -113,9 +120,6 @@ export default function SettlementCalculator({ expenses, settings, onSettleUp }:
           <div className="bg-gray-50 border-b border-gray-200 px-4 py-3">
             <p className="font-medium text-gray-900 text-sm">
               {fmtRange(calcRange.start)} — {fmtRange(calcRange.end)}
-              {new Date(calcRange.end + "T00:00:00").getFullYear() !== new Date().getFullYear()
-                ? `, ${new Date(calcRange.end + "T00:00:00").getFullYear()}`
-                : ""}
             </p>
             <p className="text-xs text-gray-500 mt-0.5">
               {rangeExpenses.length === 0
