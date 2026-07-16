@@ -104,7 +104,7 @@ lib/
 ├── types.ts            # TypeScript types
 ├── storage.ts          # Supabase-backed read/write utilities
 ├── calculations.ts     # Settlement math + filtering
-├── utils.ts            # formatCurrency, formatDate, helpers
+├── utils.ts            # formatCurrency, formatDate, formatDateWithWeekday, helpers
 └── supabase/
     ├── client.ts        # Browser Supabase client
     ├── server.ts         # Server Supabase client (Server Components/Actions)
