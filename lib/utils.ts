@@ -21,6 +21,16 @@ export function formatDate(dateStr: string): string {
   });
 }
 
+export function formatDateWithWeekday(dateStr: string): string {
+  const date = new Date(dateStr + "T00:00:00");
+  return date.toLocaleDateString("en-PK", {
+    weekday: "short",
+    day: "numeric",
+    month: "short",
+    year: "numeric",
+  });
+}
+
 export function getTodayString(): string {
   const today = new Date();
   const yyyy = today.getFullYear();
