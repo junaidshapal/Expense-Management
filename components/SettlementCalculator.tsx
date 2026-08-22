@@ -216,7 +216,7 @@ export default function SettlementCalculator({ expenses, settings, onSettleUp }:
             ) : justSettled ? (
               <div className="flex items-center gap-2.5 rounded-lg bg-violet-50 border border-violet-200 p-3.5 mt-2">
                 <CheckCircle2 className="h-4.5 w-4.5 text-violet-600 shrink-0" strokeWidth={2} />
-                <p className="text-xs font-medium text-violet-700">Marked as settled.</p>
+                <p className="text-xs font-medium text-violet-700">Marked as settled — moved to the Settled view in History.</p>
               </div>
             ) : confirmingSettle ? (
               <div className="rounded-lg bg-violet-50 border border-violet-200 p-4 mt-2 space-y-3">
@@ -225,7 +225,7 @@ export default function SettlementCalculator({ expenses, settings, onSettleUp }:
                     Settle {unsettledInRange.length} expense{unsettledInRange.length !== 1 ? "s" : ""} in this period?
                   </p>
                   <p className="text-xs text-violet-700/80 mt-0.5">
-                    Only these {fmtRange(calcRange.start)}–{fmtRange(calcRange.end)} expenses will be marked settled and removed from the dashboard balance.
+                    Only these {fmtRange(calcRange.start)}–{fmtRange(calcRange.end)} expenses will be marked settled — they leave the dashboard balance and move to the Settled view in History.
                   </p>
                 </div>
                 <div className="flex gap-2">

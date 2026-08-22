@@ -7,7 +7,7 @@ A simple, clean mobile-first expense sharing app for two hostel friends. Track d
 - **Login / Signup** — Supabase Auth (email + password). One shared account for both roommates.
 - **Dashboard** — live summary of total expenses, each person's contribution, and settlement status
 - **Add / Edit / Delete Expenses** — with categories, date, paid-by, and optional notes
-- **Expense History** — filterable by date range, category, and person
+- **Expense History** — three views (Active / Settled / All) so settled expenses leave the default list once a hisab is cleared, plus filters for date range, category, and person
 - **Settlement Calculator** — pick any date range and instantly see who owes whom
 - **Last 15 Days Hisab** — one-tap quick calculation
 - **Settings** — edit names, export/import JSON, reset all data
@@ -95,6 +95,7 @@ components/
 ├── SummaryCards.tsx    # Dashboard summary cards
 ├── ExpenseForm.tsx     # Add / edit expense form
 ├── ExpenseList.tsx     # Filterable expense history
+├── ExpenseViewTabs.tsx # Active / Settled / All view switcher for history
 ├── Filters.tsx         # Date, category, person filters
 ├── SettlementCalculator.tsx  # Hisab calculator
 ├── SettingsPanel.tsx   # Names, export, import, reset

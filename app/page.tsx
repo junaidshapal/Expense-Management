@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect, useCallback, useMemo } from "react";
-import { Expense, AppSettings, ExpenseFilters } from "@/lib/types";
+import { Expense, AppSettings, ExpenseFilters, SettledStatus } from "@/lib/types";
 import {
   getExpenses,
   getSettings,
@@ -14,6 +14,7 @@ import Navbar from "@/components/Navbar";
 import SummaryCards from "@/components/SummaryCards";
 import ExpenseForm from "@/components/ExpenseForm";
 import ExpenseList from "@/components/ExpenseList";
+import ExpenseViewTabs from "@/components/ExpenseViewTabs";
 import Filters from "@/components/Filters";
 import SettlementCalculator from "@/components/SettlementCalculator";
 import SettingsPanel from "@/components/SettingsPanel";
@@ -29,6 +30,13 @@ const PAGE_META: Record<Tab, { title: string; subtitle: string; icon: LucideIcon
   settings:   { title: "Settings",        subtitle: "Manage names and data",         icon: Settings },
 };
 
+// History has three views; settled expenses leave the default view once a hisab is settled.
+const EXPENSE_VIEW_SUBTITLE: Record<SettledStatus, string> = {
+  Unsettled: "Expenses not settled yet",
+  Settled:   "Expenses cleared in a past hisab",
+  All:       "All recorded expenses",
+};
+
 export default function HomePage() {
   const [activeTab, setActiveTab] = useState<Tab>("dashboard");
   const [expenses, setExpenses] = useState<Expense[]>([]);
@@ -39,7 +47,7 @@ export default function HomePage() {
   const [filters, setFilters] = useState<ExpenseFilters>({
     category: "All",
     paidBy: "All",
-    settledStatus: "All",
+    settledStatus: "Unsettled",
   });
 
   const refresh = useCallback(async () => {
@@ -49,6 +57,15 @@ export default function HomePage() {
   }, []);
 
   const unsettledExpenses = useMemo(() => getUnsettledExpenses(expenses), [expenses]);
+
+  const viewCounts = useMemo<Record<SettledStatus, number>>(
+    () => ({
+      Unsettled: unsettledExpenses.length,
+      Settled: expenses.length - unsettledExpenses.length,
+      All: expenses.length,
+    }),
+    [expenses, unsettledExpenses]
+  );
 
   const handleSettleUp = useCallback(async (expenseIds: string[]) => {
     await markExpensesSettled(expenseIds);
@@ -83,8 +100,14 @@ export default function HomePage() {
     setActiveTab(tab);
   }, []);
 
+  const handleViewChange = useCallback((settledStatus: SettledStatus) => {
+    setFilters((prev) => ({ ...prev, settledStatus }));
+  }, []);
+
   const meta = PAGE_META[activeTab];
   const MetaIcon = meta.icon;
+  const expenseView = filters.settledStatus || "All";
+  const subtitle = activeTab === "expenses" ? EXPENSE_VIEW_SUBTITLE[expenseView] : meta.subtitle;
 
   return (
     <div className="flex flex-col min-h-screen">
@@ -98,7 +121,7 @@ export default function HomePage() {
           </div>
           <div className="min-w-0">
             <h1 className="text-[15px] font-semibold text-gray-900 leading-tight truncate">{meta.title}</h1>
-            <p className="text-xs text-gray-400 leading-tight">{meta.subtitle}</p>
+            <p className="text-xs text-gray-400 leading-tight">{subtitle}</p>
           </div>
         </div>
 
@@ -116,6 +139,7 @@ export default function HomePage() {
 
         {activeTab === "expenses" && (
           <div key="expenses" className="animate-fade-in space-y-3">
+            <ExpenseViewTabs value={expenseView} counts={viewCounts} onChange={handleViewChange} />
             <Filters filters={filters} settings={settings} onChange={setFilters} />
             <ExpenseList expenses={expenses} settings={settings} filters={filters} />
           </div>

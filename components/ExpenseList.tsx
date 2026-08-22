@@ -4,7 +4,7 @@ import { Expense, AppSettings, ExpenseFilters } from "@/lib/types";
 import { filterExpenses } from "@/lib/calculations";
 import { formatCurrency, formatDateWithWeekday } from "@/lib/utils";
 import { CATEGORY_ICONS, CATEGORY_COLORS } from "@/lib/categories";
-import { SearchX } from "lucide-react";
+import { SearchX, CheckCircle2 } from "lucide-react";
 
 interface ExpenseListProps {
   expenses: Expense[];
@@ -13,19 +13,41 @@ interface ExpenseListProps {
 }
 
 export default function ExpenseList({ expenses, settings, filters }: ExpenseListProps) {
+  const view = filters.settledStatus || "All";
+  // Expenses belonging to the current view (Active / Settled / All), before the other filters.
+  const inView = filterExpenses(expenses, { settledStatus: view });
   const filtered = filterExpenses(expenses, filters);
   const sorted = [...filtered].sort((a, b) => b.date.localeCompare(a.date));
 
   if (sorted.length === 0) {
+    const viewIsEmpty = inView.length === 0;
+    const emptyState =
+      viewIsEmpty && view === "Settled"
+        ? {
+            icon: CheckCircle2,
+            title: "No settled expenses yet",
+            hint: "Settle a period from the Hisab tab and those expenses move here.",
+          }
+        : viewIsEmpty && view === "Unsettled" && expenses.length > 0
+        ? {
+            icon: CheckCircle2,
+            title: "Everything is settled",
+            hint: "No active expenses — check the Settled view for past hisab.",
+          }
+        : {
+            icon: SearchX,
+            title: "No expenses found",
+            hint: expenses.length === 0 ? "Add your first expense to get started" : "Try adjusting your filters",
+          };
+    const EmptyIcon = emptyState.icon;
+
     return (
       <div className="text-center py-12 bg-white rounded-lg border border-gray-200">
         <div className="w-12 h-12 rounded-full bg-green-50 flex items-center justify-center mx-auto mb-3">
-          <SearchX className="h-5 w-5 text-green-700" strokeWidth={1.75} />
+          <EmptyIcon className="h-5 w-5 text-green-700" strokeWidth={1.75} />
         </div>
-        <p className="font-medium text-gray-700 text-sm">No expenses found</p>
-        <p className="text-xs text-gray-400 mt-1">
-          {expenses.length === 0 ? "Add your first expense to get started" : "Try adjusting your filters"}
-        </p>
+        <p className="font-medium text-gray-700 text-sm">{emptyState.title}</p>
+        <p className="text-xs text-gray-400 mt-1 px-6">{emptyState.hint}</p>
       </div>
     );
   }
@@ -34,7 +56,7 @@ export default function ExpenseList({ expenses, settings, filters }: ExpenseList
     <div className="space-y-2">
       <p className="text-[11px] text-gray-500 font-semibold uppercase tracking-wide px-0.5">
         {sorted.length} expense{sorted.length !== 1 ? "s" : ""}
-        {expenses.length !== sorted.length && ` · filtered from ${expenses.length}`}
+        {inView.length !== sorted.length && ` · filtered from ${inView.length}`}
       </p>
 
       {sorted.map((expense) => {
